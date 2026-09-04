@@ -89,7 +89,7 @@ Linux 或 macOS：
 | Agent | 安裝路徑 |
 | --- | --- |
 | Gemini CLI | `~/.gemini/config/skills/huashu-design/` |
-| Codex | `~/.codex/config/skills/huashu-design/` |
+| Codex | `~/.codex/skills/huashu-design/` |
 | Claude Code | `~/.claude/skills/huashu-design/` |
 
 Windows：
@@ -97,7 +97,7 @@ Windows：
 | Agent | 安裝路徑 |
 | --- | --- |
 | Gemini CLI | `%USERPROFILE%\.gemini\config\skills\huashu-design\` |
-| Codex | `%USERPROFILE%\.codex\config\skills\huashu-design\` |
+| Codex | `%USERPROFILE%\.codex\skills\huashu-design\` |
 | Claude Code | `%USERPROFILE%\.claude\skills\huashu-design\` |
 
 `%USERPROFILE%` 代表目前 Windows 使用者的家目錄，例如 `C:\Users\<使用者名稱>`。

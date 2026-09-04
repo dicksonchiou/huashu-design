@@ -77,7 +77,7 @@ Linux or macOS:
 | Agent | Installation path |
 | --- | --- |
 | Gemini CLI | `~/.gemini/config/skills/huashu-design/` |
-| Codex | `~/.codex/config/skills/huashu-design/` |
+| Codex | `~/.codex/skills/huashu-design/` |
 | Claude Code | `~/.claude/skills/huashu-design/` |
 
 Windows:
@@ -85,7 +85,7 @@ Windows:
 | Agent | Installation path |
 | --- | --- |
 | Gemini CLI | `%USERPROFILE%\.gemini\config\skills\huashu-design\` |
-| Codex | `%USERPROFILE%\.codex\config\skills\huashu-design\` |
+| Codex | `%USERPROFILE%\.codex\skills\huashu-design\` |
 | Claude Code | `%USERPROFILE%\.claude\skills\huashu-design\` |
 
 `%USERPROFILE%` represents the current Windows user's home directory, for example `C:\Users\<username>`.
