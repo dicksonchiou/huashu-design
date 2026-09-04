@@ -1,4 +1,6 @@
-# Voiceover Pipeline · 解說驅動動畫
+# Voiceover Pipeline · 外部旁白驅動動畫
+
+> 本文件規範旁白音訊、`timeline.json` 與動畫同步。旁白音訊與時間軸需由外部錄音或音訊工具準備；本 skill 不負責產生語音。
 
 > 把動畫從「無聲畫面 + 後製配音」升級為「**先有解說詞，再按音訊實測時長驅動畫面**」的工作流程。
 > 適用：5-20 分鐘概念解說影片、教學影片、長篇知識科普。
@@ -166,12 +168,12 @@ const App = () => (
                 │  [[cue:xx]] 標關鍵句）   │
                 └──────────────┬───────────┘
                                │
-                  narrate-pipeline.mjs
+                    外部錄音／音訊工具
                                │
                                ▼
             ┌──────────────────────────────┐
-            │ voiceover.mp3 (拼接的整段)  │
-            │ timeline.json (實測時長)    │
+            │ voiceover.mp3（旁白音訊）    │
+            │ timeline.json（實際時間軸）  │
             └──────────────┬───────────────┘
                            │
               ┌────────────┴────────────┐
@@ -191,9 +193,6 @@ const App = () => (
 ```markdown
 ---
 title: 什麼是 LLM
-voice: S_JSdgdWk22   # 可選，覆蓋 .env 預設音色
-speed: 1.0           # 可選，0.5-2.0
-gap: 0.4             # 段間靜音秒數，預設 0.3
 ---
 
 ## intro
@@ -210,18 +209,15 @@ LLM 全稱 Large Language Model，[[cue:bigmodel]]它是一個有幾千億參數
 
 **規則**：
 - 段標題 `## scene-id` 是英文/數字 + 連字元（如 `## what-is`、`## scene-1`）
-- `[[cue:xx]]` 標在**關鍵句中間**——指令碼執行時會在該位置切割文字，cue 之後那一刻就是畫面的觸發點
+- `[[cue:xx]]` 標在**關鍵句中間**——製作時間軸時以此作為 cue 對齊提示，cue 之後那一刻就是畫面的觸發點
 - cue id 在動畫 HTML 裡用 `<Cue id="xx">` 監聽
-- 寫解說時**關注節奏 + 短句**，長句 TTS 出來會平淡
+- 寫解說時**關注節奏 + 短句**，並在錄音與剪輯時保留可讀的停頓
 
 ## timeline.json schema
 
 ```ts
 {
   title: string,
-  voice: string | null,
-  speed: number,
-  gap: number,
   totalDuration: number,        // 整段 voiceover.mp3 的實測秒數
   voiceover: 'voiceover.mp3',   // 相對 timeline.json 的路徑
   scenes: [
@@ -230,9 +226,9 @@ LLM 全稱 Large Language Model，[[cue:bigmodel]]它是一個有幾千億參數
       start: number,            // 該段在整段音訊裡的開始時間
       end: number,
       duration: number,
-      audio: 'audio/<id>.mp3',  // 該段單獨音訊（合併前的子段已 concat）
+      audio: 'audio/<id>.mp3',  // 可選：該段單獨音訊
       text: string,             // 已剝離 [[cue:xx]] 標記的整段文字
-      // chunks 是字幕顯示的來源——每個 chunk 是被 cue 切開的子段，含 TTS 實測時間窗
+      // chunks 是字幕顯示的來源——每個 chunk 是被 cue 切開的子段，含旁白對齊時間窗
       chunks: [
         {
           text: string,            // 子段文字
@@ -240,8 +236,7 @@ LLM 全稱 Large Language Model，[[cue:bigmodel]]它是一個有幾千億參數
           end: number,
           absoluteStart: number,   // 整軌絕對時間（對齊 voiceover.mp3）
           absoluteEnd: number,
-          // words: 字級時間戳（TTS enable_subtitle 實測回傳，預設帶；--no-timestamps 關閉）
-          // 注意 text 是 TN 後文字（"2025"→"二零二五"），標點附在前一個字上
+          // words: 可選的字級時間戳，由字幕／轉錄工具或人工對齊提供
           words: [
             { text: string, start: number, end: number, absoluteStart: number, absoluteEnd: number }
           ],
@@ -259,7 +254,7 @@ LLM 全稱 Large Language Model，[[cue:bigmodel]]它是一個有幾千億參數
 }
 ```
 
-`absoluteTime` 和 `absoluteStart/End` 都是**真實測出來的**——pipeline 把段內文字按 cue 切成子段分別 TTS，時間 = 累加前面子段的實測時長。**不是按字元數線性估算的近似值**。
+`absoluteTime` 和 `absoluteStart/End` 都應根據**實際旁白音訊對齊**——時間軸建立時以音訊波形、剪輯標記或轉錄結果為準。**不是按字元數線性估算的近似值**。
 
 ## 字幕（Subtitles）
 
@@ -296,7 +291,7 @@ const { NarrationStage, Subtitles } = NarrationStageLib;
 <Subtitles karaoke karaokeColor="#0a84ff" />   {/* 自訂高亮色 */}
 ```
 
-- 依賴 timeline chunks 裡的 `words` 字級時間戳（narrate-pipeline.mjs 預設輸出；豆包 TTS v3 `enable_subtitle`，需 2.0 資源，僅中英文）
+- 依賴 timeline chunks 裡可選的 `words` 字級時間戳（可由字幕／轉錄工具或人工提供）
 - 整行顯示、逐字變色，行切分複用 ≤maxLen + 不跨句號規則（由 words 拼行，與發音嚴格對齊）
 - chunk 沒有 words 時自動回落普通 chunk 模式，呼叫方無需判斷
 
@@ -311,7 +306,7 @@ splitChunkToLines(text, maxLen = 13)
 // 中英混合：英文/數字按 0.5 字算視覺寬度
 ```
 
-如果 chunk 切完後某行明顯太長或太短，**改解說稿裡 cue 位置**（cue 把段切得更細），不要在前端調切句邏輯。
+如果 chunk 切完後某行明顯太長或太短，**調整時間軸裡的 chunk 或 cue 對齊**，不要在前端調切句邏輯。
 
 ## NarrationStage API
 
@@ -356,58 +351,46 @@ NarrationStage 自動偵測 `window.__recording`：
 - **實播模式**（預設）：跟隨 audio 元素的 currentTime，使用者暫停/拖動 seek 都能同步
 - **錄影模式**（render-video.js 設定 `window.__recording = true`）：rAF wall-clock 自驅動從 0 開始，暴露 `window.__seek(t)` 給 render-video.js 復位
 
-## 三個指令碼
+## 兩個指令碼
 
 | 指令碼 | 輸入 | 輸出 |
 |---|---|---|
-| `scripts/cloud/tts-doubao.mjs` | 單段文字 | 單個 mp3 + 實測時長 |
-| `scripts/narrate-pipeline.mjs` | 解說稿 .md | voiceover.mp3 + timeline.json |
 | `scripts/mix-voiceover.sh` | 影片 + voiceover.mp3 [+ BGM] | 帶音訊的 MP4 |
 | `scripts/render-narration.sh` | 解說 HTML + timeline.json | 最終 MP4（錄製 + 混音一條龍）|
 
-## .env 設定
+## 音訊素材與 timeline 準備
 
-> ⚠️ TTS 是可選雲端能力：解說稿文字會傳送到豆包 TTS 官方介面（openspeech.bytedance.com），
-> 使用你自己的 key。指令碼首次呼叫需 `--yes` 或 `HUASHU_CLOUD_OK=1` 顯式確認，
-> endpoint 強制校驗位元組官方網域名稱白名單。資料流向宣告見倉庫根 `SECURITY.md`。
+本 skill 不負責產生旁白。請先準備一個可播放的 `voiceover.mp3`，再用音訊編輯器、字幕／轉錄工具或人工整理 `timeline.json`。至少需要以下欄位：
 
-skill 根目錄下 `.env`（已 gitignore）：
-
-```
-DOUBAO_TTS_API_KEY=<your_api_key>
-DOUBAO_TTS_VOICE_ID=zh_female_xiaohe_uranus_bigtts
-DOUBAO_TTS_ENDPOINT=https://openspeech.bytedance.com/api/v3/tts/unidirectional
-```
-
-也可使用控制檯的 App ID + Access Token 鑑權：
-
-```
-DOUBAO_APP_ID=<your_app_id>
-DOUBAO_ACCESS_KEY=<your_access_token>
-DOUBAO_TTS_VOICE_ID=zh_female_xiaohe_uranus_bigtts
+```json
+{
+  "title": "什麼是 LLM",
+  "totalDuration": 12.5,
+  "voiceover": "voiceover.mp3",
+  "scenes": []
+}
 ```
 
-`DOUBAO_TTS_RESOURCE_ID` 預設按音色自動推斷：`S_` 克隆音色使用 `seed-icl-1.0`，`uranus` 官方音色使用 `seed-tts-2.0`，其他官方音色使用 `seed-tts-1.0`。
+`NarrationStage` 需要 `scenes`、`chunks` 與 `cues` 才能驅動畫面與字幕；完整欄位定義見上方 schema。時間請以 `ffprobe`、音訊編輯器或轉錄結果核對，不要用字數推算。
 
-## 標準工作流程（10 步）
+## 標準工作流程（9 步）
 
-1. **寫解說稿**：解說稿是原始碼。先把整段口播寫完整，標段標題 `## scene-id`，關鍵句前加 `[[cue:xx]]`
-2. **跑 narrate-pipeline**：`node scripts/narrate-pipeline.mjs --script script.md --out-dir _narration --yes`（`--yes`=確認文字傳送豆包TTS）
-3. **聽整段 voiceover.mp3**：節奏不對回去改稿。**這一步決定整片品質上限**
+1. **寫解說稿**：先把整段口播寫完整，標段標題 `## scene-id`，關鍵句前加 `[[cue:xx]]`
+2. **準備旁白音訊**：使用外部錄音或音訊工具輸出 `voiceover.mp3`，先完整聆聽並調整節奏
+3. **建立時間軸**：依實際音訊建立 `timeline.json`，對齊 scene、chunk 與 cue
 4. **🛑 設計前先回答鐵律**：hero element 是什麼？它在每段是什麼狀態？跨場景怎麼 morph？答不上不要寫程式碼
 5. **寫動畫 HTML**：用 NarrationStage + 一個或幾個 hero element 跨 scene 演戲
 6. **實播預覽**：瀏覽器開啟 HTML，點 ▶ Play，聽畫面+解說同步
 7. **第一觀眾自檢**：用上面「自檢 · 第一觀眾反應」表打分。失敗回到 Step 4 重做
-8. **錄影**：`bash scripts/render-narration.sh demo.html --timeline=_narration/timeline.json`（自動錄無聲 MP4 + 混入 voiceover）
-9. **可選 BGM**：在 render-narration 加 `--bgm-mood=educational`（或 tech / tutorial 等）
-10. **交付**：瀏覽器 HTML（即時演示用）+ 最終 MP4（釋出用）
+8. **錄影**：`bash scripts/render-narration.sh demo.html --timeline=timeline.json`（自動錄無聲 MP4 + 混入旁白）
+9. **可選 BGM 並交付**：在 render-narration 加 `--bgm-mood=educational`（或 tech / tutorial 等），交付瀏覽器 HTML 與最終 MP4
 
 ## 異常處理
 
 | 問題 | 解決 |
 |---|---|
-| TTS API 出錯 | 檢查 .env 裡 `DOUBAO_TTS_API_KEY`，或 `DOUBAO_APP_ID` + `DOUBAO_ACCESS_KEY` 是否正確 |
-| 某段音訊明顯比指令碼長/短 | 該段文字裡有奇怪標點或 emoji，TTS 解析異常 → 改稿 |
+| 旁白音訊找不到 | 檢查 `timeline.json` 的 `voiceover` 路徑與檔案位置 |
+| scene 或 cue 時間不準 | 以實際音訊重新核對 `timeline.json` 的 start/end/offset |
 | cue absoluteTime 不準 | 段內子段拼接時 ffmpeg 有問題 → 檢查 mp3 編碼一致性 |
 | 錄影結果有黑畫面 | render-video.js 沒拿到 `window.__ready` 訊號 → 檢查 NarrationStage 是否正常掛載 |
 | 錄影畫面卡頓 | 動畫裡有重 layout（大量 box-shadow / blur）→ 簡化或預合成 |
@@ -415,9 +398,9 @@ DOUBAO_TTS_VOICE_ID=zh_female_xiaohe_uranus_bigtts
 
 ## 何時不用這套 pipeline
 
-- **<60s 短動畫**：直接做無聲動畫 + 後製配音（add-music.sh + 一段單獨 TTS）即可，不需要 timeline 驅動
+- **<60s 短動畫**：直接做無聲動畫 + `scripts/mix-voiceover.sh` 混入外部準備的旁白即可，不需要 timeline 驅動
 - **純 BGM 影片**：用 `add-music.sh` 加預設 BGM
-- **真人錄音替換 TTS**：把 `voiceover.mp3` 替換成真人錄音，timeline 自己手寫或用 ffprobe 測段時長 + 工具指令碼生成 → 流程其餘部分通用
+- **沒有旁白**：使用一般的動畫匯出與 BGM/SFX 流程，不需要 NarrationStage
 
 ---
 

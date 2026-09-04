@@ -389,15 +389,15 @@ HTML檔案的開頭先寫下你的assumptions + reasoning + placeholders，**儘
    - SFX 按 `references/audio-design-rules.md` 設計 cue 清單（時間軸 + 音效類型），用 `assets/sfx/<category>/*.mp3` 37 個預先製作的資源，按配方 A/B/C/D 選密度（發布 hero ≈ 6個/10s，工具展示 ≈ 0-2個/10s）
    - **BGM + SFX 雙軌制必須同時做**——只做 BGM 是 ⅓ 分完成度；SFX 佔高頻、BGM 佔低頻，頻段隔離見 audio-design-rules.md 的 ffmpeg 範本
    - 交付前 `ffprobe -select_streams a` 確認有 audio stream，沒有則不是成品
-   - **（終渲後）AI看片評審**（可選雲能力，自備key+明確確認，見SECURITY.md）：`uv run scripts/cloud/ai-review-video.py --video <成片> --context 導演稿.md --yes` 出結構化報告（黑幀/死段/hero貫穿/過渡類型/音效空打），流程與侷限見 `references/ai-video-review.md`；無key時用 `scripts/verify-video.sh` 截幀人工看
+   - **交付前本機檢查**：用 `scripts/verify-video.sh` 檢查影片基本結構，並依 `references/verification.md` 截幀人工確認畫面；整個檢查流程不需要第三方 API key
    - **跳過音訊的條件**：使用者明確說「不要音訊」「純畫面」「我要自己配音」——否則預設帶。
    - 參考完整流程見 `references/video-export.md` + `references/audio-design-rules.md` + `references/sfx-library.md`。
 9.5. **（帶解說時走這條）解說驅動動畫 · L2 長概念影片**：使用者要做「5-20 分鐘解釋一個概念」、「帶配音的教學」、「長篇科普影片」時——**不要先做動畫再配音**，那會讓畫面節奏跟解說對不上。改走 `references/voiceover-pipeline.md` 的解說驅動流程：
-   - **寫解說稿**（markdown，`## scene-id` 分段，`[[cue:xx]]` 標關鍵句）→ 解說稿是原始碼，節奏靠它撐
-   - **跑 narrate-pipeline.mjs**（豆包 TTS · `.env` 設定音色）→ 輸出 voiceover.mp3 + timeline.json（cue 時間是真實測出來的，不是按字元估算）
+   - **寫解說稿並準備旁白音訊**（markdown，`## scene-id` 分段，`[[cue:xx]]` 標關鍵句）→ 由外部錄音或音訊工具產生 `voiceover.mp3`
+   - **建立 `timeline.json`**：依實際旁白音訊對齊 scene、chunk 與 cue 時間，不按字元數估算
    - **🛑 設計動畫前先答鐵律 3 條**：(1) hero element 是什麼？(2) 它跨 7 段怎麼 morph？(3) 任意一幀畫面有運動嗎？答不上不要寫程式碼
    - **寫動畫 HTML**：用 `assets/narration_stage.jsx`（NarrationStage + Scene + Cue + useNarration + useSceneFade + **Subtitles**）→ hero 直接放 `<NarrationStage>` 子級，不進 Scene；`<Subtitles />` 預設帶（Bilibili風·深墨字+白光暈，按 timeline.chunks 自動切 ≤12 字短行不跨句號）
-   - **錄最終 MP4**：`bash scripts/render-narration.sh demo.html --timeline=_narration/timeline.json [--bgm-mood=educational]` → 自動錄無聲 MP4 + 混入人聲 + 可選 BGM
+   - **錄最終 MP4**：`bash scripts/render-narration.sh demo.html --timeline=timeline.json [--bgm-mood=educational]` → 自動錄無聲 MP4 + 混入旁白 + 可選 BGM
    - **失敗模式 #1（必須避免）**：每個 Scene 各自獨立 layout + cue 用 fade-up + scene 切換整頁 opacity 切換 = **帶配音的 PowerPoint** = 質感歸零。完整規則見 `references/voiceover-pipeline.md` 頭部「鐵律」章節。
 10. **（可選）專家評審**：使用者若提「評審」「好不好看」「review」「評分」，或你對產出有疑問想主動品質檢查，按 `references/critique-guide.md` 走 5 維度評審——哲學一致性 / 視覺層級 / 細節執行 / 功能性 / 創新性各 0-10 分，輸出總評 + Keep（做得好的）+ Fix（嚴重程度 ⚠️致命 / ⚡重要 / 💡最佳化）+ Quick Wins（5 分鐘能做的前 3 件事）。評審設計不評設計師。
 
@@ -513,7 +513,7 @@ HTML檔案的開頭先寫下你的assumptions + reasoning + placeholders，**儘
 | **HyperFrames 渲染後端**（新動畫預設；選型邊界/合成契約/老demo遷移/check流程） | `references/hyperframes-backend.md` |
 | **設計語言的 GSAP 實作配方**（easing 對映/運動語言8條/五段敘事骨架/seek 安全規則） | `references/gsap-recipes.md` |
 | **動畫的正向設計語法**（Anthropic 級敘事/運動/節奏/表達風格）| `references/animation-best-practices.md`（5 段敘事+Expo easing+運動語言 8 條+3 種場景配方）|
-| **帶解說的長動畫 / 長概念影片**（5-20 分鐘帶配音、解說驅動畫面、TTS 實測時長生成 timeline）| `references/voiceover-pipeline.md`（鐵律：連續運動敘事、禁 PowerPoint 切換）+ `assets/narration_stage.jsx` + `scripts/cloud/tts-doubao.mjs`（可選雲TTS，自備key，見SECURITY.md）+ `scripts/narrate-pipeline.mjs` + `scripts/{mix-voiceover,render-narration}.sh` |
+| **帶解說的長動畫 / 長概念影片**（5-20 分鐘帶配音、解說驅動畫面）| `references/voiceover-pipeline.md`（鐵律：連續運動敘事、禁 PowerPoint 切換）+ `assets/narration_stage.jsx` + `scripts/{mix-voiceover,render-narration}.sh`（旁白音訊與 timeline 由外部準備） |
 | 做Tweaks即時調參 | `references/tweaks-system.md` |
 | 沒有design context怎麼辦 | `references/design-context.md`（薄 fallback） 或 `references/design-styles.md`（厚 fallback：HTML 原生 60 種風格庫，網頁 20+PPT 20+資訊圖 20，依溫度分級） |
 | **需求模糊要推薦風格方向** | `references/design-styles.md`（60 種 HTML 原生風格庫，含還原度/溫度/開源字型）+ `assets/showcases/INDEX.md`（預製截圖畫廊） |

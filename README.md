@@ -270,7 +270,7 @@ Claude Design 是**更好的圖形工具**，huashu-design 是**讓圖形工具�
 
 ## 安全與資料流
 
-核心流程（設計→渲染→MP4/PDF/PPTX 匯出）**100% 本機執行、零 key，Playwright 匯出器預設阻擋網路**。只有可信 HTML 確實需要遠端字型或 script 時，才明確加 `--allow-network`。雲端能力（豆包 TTS 配音、AI 看片評審）全部隔離在 `scripts/cloud/`，完全可選：使用你自己的 key、只傳送到對應廠商官方 API、首次呼叫需 `--yes` 明確確認。無 telemetry，沒有任何資料傳送至作者伺服器。完整出站網域、金鑰處理與刪除邊界請見 [SECURITY.md](SECURITY.md)。
+核心流程（設計→渲染→MP4/PDF/PPTX 匯出）**100% 本機執行，不需要第三方 AI 或 TTS API key，Playwright 匯出器預設阻擋網路**。只有可信 HTML 確實需要遠端字型或 script 時，才明確加 `--allow-network`。需要旁白時，使用外部準備好的音訊檔案，再交給本機混音與渲染工具處理。無 telemetry，沒有任何資料傳送至作者伺服器。完整出站網域與刪除邊界請見 [SECURITY.md](SECURITY.md)。
 
 ---
 

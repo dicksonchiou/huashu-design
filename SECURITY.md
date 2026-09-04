@@ -2,17 +2,16 @@
 
 This document exhaustively declares every network destination, credential touchpoint, subprocess, and deletion this skill can perform, so that users and automated security reviewers can verify the claims against the code.
 
-**TL;DR: the core pipeline (HTML design → render → MP4/PDF/PPTX export) runs locally with zero API keys. Playwright renderers block HTTP(S), WebSocket, and service workers by default; `--allow-network` is an explicit opt-in for HTML that intentionally uses remote fonts or scripts. All cloud-touching code is isolated in `scripts/cloud/`, is strictly optional, uses only keys you supply, sends data only to the corresponding vendor's official API, and refuses to run without explicit consent (`--yes` flag or `HUASHU_CLOUD_OK=1`). There is no telemetry. No data is ever sent to any server controlled by the skill author.**
+**TL;DR: the core pipeline (HTML design → render → MP4/PDF/PPTX export) runs locally without third-party AI or TTS API keys. There are no built-in cloud AI or speech integrations. Playwright renderers block HTTP(S), WebSocket, and service workers by default; `--allow-network` is an explicit opt-in for HTML that intentionally uses remote fonts or scripts. There is no telemetry. No data is ever sent to any server controlled by the skill author.**
 
 ## Complete list of network destinations
 
 | Host | Where | What is sent | When |
 |---|---|---|---|
-| `ark.cn-beijing.volces.com` (Volcengine Ark, ByteDance official API) | `scripts/cloud/ai-review-video.py` | Compressed segments of **your own rendered video**, for AI quality review, authenticated with **your own** `ARK_API_KEY` | Only when you run it, and only after the consent gate |
-| `openspeech.bytedance.com` (ByteDance official TTS API) | `scripts/cloud/tts-doubao.mjs` (also invoked by `scripts/narrate-pipeline.mjs`) | The narration text you want synthesized, with **your own** key. The endpoint requires HTTPS, the exact official hostname and standard HTTPS port; credential-bearing requests refuse redirects | Only when you run it, and only after the consent gate |
 | `commons.wikimedia.org`, `upload.wikimedia.org` (official Wikimedia API and media host) | `scripts/fetch_images.py` | Image search keywords; downloads CC/public-domain images with license info printed for review | Only when the agent fetches stock imagery for a content design |
 | Brand official websites, `simpleicons.org`, Google favicon service | `references/brand-asset-protocol.md` (instructions, no script) | Plain GET requests to download publicly served logos/brand assets | Only when you ask for a brand-specific design |
 | `fonts.googleapis.com`, `unpkg.com` and similar CDNs | Static `<link>`/`<script>` tags inside demo/output HTML | Standard browser font/library fetches | When you open HTML in a normal browser, or explicitly pass `--allow-network` to a renderer |
+| `api.anthropic.com` | `references/react-setup.md` option B (local demo instructions only) | User-entered prompt and API key | Only if you explicitly choose that local-only demo; never used by the core scripts |
 
 That is the entire list. `grep -rn "https://" --include="*.py" --include="*.mjs" --include="*.js" --include="*.sh" scripts/` to verify.
 
@@ -20,16 +19,11 @@ That is the entire list. `grep -rn "https://" --include="*.py" --include="*.mjs"
 
 All Playwright-based renderers and `scripts/verify.py` deny HTTP(S), WebSocket, and service workers by default. This prevents an input HTML file from silently loading mutable CDN code or making web requests during export. If a trusted design intentionally depends on remote fonts or scripts, pass `--allow-network`; doing so executes those remote resources inside the browser page and makes the output dependent on them. Prefer vendored, version-pinned local assets for reproducible production output.
 
-## API keys
+## User-supplied credentials
 
-- No key is hardcoded anywhere; the repo ships only `.env.example` placeholders (`.env` is gitignored).
-- Keys are read from the **skill's own root `.env`** or process environment — never from files elsewhere on your machine. `ai-review-video.py` extracts only the single `ARK_API_KEY` variable; it does not load the rest of the file into the environment.
-- Keys are transmitted exclusively to the corresponding vendor's official endpoint listed above, over HTTPS, as auth headers.
-- `references/react-setup.md` option B (pasting an Anthropic key into a demo page input) is explicitly marked local-demo-only and not recommended; the default options require no key at all.
-
-## Explicit consent gate
-
-Both cloud scripts print exactly what will be sent to which host and exit before any network call unless you pass `--yes` or set `HUASHU_CLOUD_OK=1`. Local renderers do not need the cloud consent gate. Their separate `--allow-network` flag only opts a trusted HTML document into loading its declared web resources; it does not grant access to cloud credentials.
+- Core scripts do not read, store, or transmit provider API credentials.
+- `references/react-setup.md` option B is a local-only demonstration in which the user enters an Anthropic key into the page. It is not used by the core pipeline and must not be deployed or distributed with a populated key.
+- The default demo setup uses a mock and does not require a key.
 
 ## Subprocesses
 
@@ -37,7 +31,7 @@ All subprocess calls invoke local media tools only: `ffmpeg`, `ffprobe`, `ffplay
 
 ## File deletion
 
-Recursive deletion is limited to temp directories the scripts themselves create with unique timestamp+PID names (`.video-tmp-*`, `.seek-tmp-*`, `_narration/.tmp`, Python `tempfile.TemporaryDirectory`). No script ever deletes user data or anything outside its own scratch space.
+Recursive deletion is limited to temporary directories the scripts themselves create with unique timestamp+PID names (`.video-tmp-*`, `.seek-tmp-*`). No script ever deletes user data or anything outside its own scratch space.
 
 ## Dependencies
 
@@ -51,7 +45,7 @@ One documented exception to be aware of: `npx hyperframes init` (optional animat
 
 ## Proxy handling note
 
-`fetch_images.py` and `ai-review-video.py` disable inheriting proxy environment variables (`trust_env = False` / clearing `ALL_PROXY` etc.) for their own requests. This exists to survive stale local proxy configurations that break TLS — not to evade monitoring. If you need these requests to go through your proxy, set it explicitly in the script invocation.
+`fetch_images.py` disables inheriting proxy environment variables (`trust_env = False` / clearing `ALL_PROXY` etc.) for its own requests. This exists to survive stale local proxy configurations that break TLS — not to evade monitoring. If you need these requests to go through your proxy, set it explicitly in the script invocation.
 
 ## Reporting
 

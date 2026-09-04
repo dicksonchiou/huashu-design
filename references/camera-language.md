@@ -360,7 +360,6 @@ duration = 0.55 × |ln(zoom₂ / zoom₁)| / ln 2      clamp 到 [0.30, 0.94] �
 | `animation-pitfalls.md` | 踩雷清單 | 鏡頭專屬坑（scale 發糊 / perspective 被打斷 / pan 露邊）§3.3-3.4 已覆蓋設計側，pitfalls 收技術側復現 |
 | `hyperframes-backend.md` | 渲染後端契約 | CSS zoom 技法在離線逐幀渲染下的適用性見 §3.4 |
 | `voiceover-pipeline.md` | 解說驅動長影片 | move on pause（§6.3）的靜默點資料從 narration 分句間隙來 |
-| `ai-video-review.md` | 成片評審 | 評審 checklist 的轉場分類按 §7 三層詞彙擴充 |
 
 **呼叫順序**：導演稿 / 分鏡階段讀 §0-§2 定預算和詞彙 → 寫 timeline 前讀 §3-§7 定實作約定
 與接縫 → 交付前過 §10 清單。

@@ -393,7 +393,7 @@ const NarrationStageLib = (() => {
    * 自動從目前 scene.chunks 取得活動 chunk，按 splitChunkToLines 切成短行，
    * 按字數比例分配 chunk 時間窗給每行顯示。
    *
-   * 必要：timeline.scenes[].chunks[]（narrate-pipeline.mjs 已預設輸出）
+   * 必要：timeline.scenes[].chunks[]（由旁白時間軸準備流程提供）
    *
    * Props（可覆寫預設樣式）：
    *   bottom    距底部畫素，預設 90（不貼邊）
@@ -404,12 +404,12 @@ const NarrationStageLib = (() => {
    *
    * 深底場景：把 color 改成 '#fff'，haloColor 改成 'rgba(0,0,0,0.85)' 即可。
    *
-   * 卡拉 OK 模式（字級醒目提示，需 timeline chunks 裡帶 words——narrate-pipeline.mjs 預設輸出）：
+   * 卡拉 OK 模式（字級醒目提示，需 timeline chunks 裡帶 words——可由字幕工具或手動提供）：
    *   karaoke       true 開啟，預設 false。整行顯示，讀到哪個字哪個字變色
    *   karaokeColor  已讀字的顏色，預設品牌橙 '#e8590c'
    *   chunk 沒有 words 資料時自動回到一般 chunk 模式，呼叫方不用做判斷。
-   *   注意：words 是 TN 後文字（"2025"→"二零二五"），卡拉 OK 行直接由 words 拼出，
-   *   保證醒目提示與發音嚴格對齊（與 chunk.text 原文可能有差異）。
+   *   注意：words 的文字與時間窗必須由旁白音訊對齊；卡拉 OK 行直接由 words 拼出，
+   *   因此 words 與 chunk.text 可以不同，但不能脫離實際發音。
    */
   function splitWordsToLines(words, maxLen = 13) {
     // 把字級時間戳 token 貪心打包成 ≤maxLen 的行；強標點（。！？）後強制換行，絕不跨句號

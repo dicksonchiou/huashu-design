@@ -11,7 +11,7 @@
 #
 # Required:
 #   <html>                解說動畫的 HTML（應內嵌 NarrationStage + recording 模式 rAF 自驅）
-#   --timeline=<path>     timeline.json 路徑（自動讀 totalDuration 和 voiceover.mp3 路徑）
+#   --timeline=<path>     已準備好的 timeline.json（自動讀 totalDuration 和 voiceover.mp3 路徑）
 #
 # Optional:
 #   --bgm-mood=<name>     BGM 預設（educational / tech / tutorial / ...）
@@ -78,7 +78,7 @@ if [ -z "$HTML" ] || [ ! -f "$HTML" ]; then
   exit 1
 fi
 if [ -z "$TIMELINE" ] || [ ! -f "$TIMELINE" ]; then
-  echo "✗ 缺 --timeline=<path>（timeline.json 由 narrate-pipeline.mjs 產生）" >&2
+  echo "✗ 缺 --timeline=<path>（請先準備旁白音訊與 timeline.json）" >&2
   exit 1
 fi
 

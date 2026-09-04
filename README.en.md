@@ -239,7 +239,7 @@ Claude Design is a **better graphics tool**. Huashu-design makes **the graphics-
 
 ## Security & Data Flow
 
-The core pipeline (design → render → MP4/PDF/PPTX export) runs **100% locally with zero API keys, and Playwright exporters block network access by default**. Trusted HTML that intentionally needs remote fonts or scripts must opt in with `--allow-network`. Cloud features (Doubao TTS narration, AI video review) are isolated in `scripts/cloud/`, fully optional: your own keys, official vendor APIs only, and an explicit `--yes` consent gate before anything leaves your machine. No telemetry; nothing is ever sent to any author-controlled server. Every outbound host, credential touchpoint, and deletion boundary is declared in [SECURITY.md](SECURITY.md).
+The core pipeline (design → render → MP4/PDF/PPTX export) runs **100% locally without third-party AI or TTS API keys, and Playwright exporters block network access by default**. Trusted HTML that intentionally needs remote fonts or scripts must opt in with `--allow-network`. When narration is needed, provide an externally prepared audio file and use the local mixing and rendering tools. No telemetry; nothing is ever sent to any author-controlled server. Every outbound host and deletion boundary is declared in [SECURITY.md](SECURITY.md).
 
 ---
 

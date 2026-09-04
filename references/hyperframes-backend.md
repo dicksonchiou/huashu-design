@@ -12,7 +12,7 @@
 | 老 Stage demo 要複用/改版 | 順手遷移（介面卡配方見下，20-30 分鐘/個）；只重渲不改就仍用 render-video-seek.js |
 | 弱 runtime（無 npm / 無法裝依賴 / 單檔案交付給使用者雙擊開啟） | 自研 Stage（assets/animations.jsx），老流程不變 |
 | 互動演示（使用者要在瀏覽器裡玩，不匯出影片） | 自研 Stage 或普通 HTML，HyperFrames 是渲染管線不是互動框架 |
-| 帶解說長影片（Step 9.5，narration_stage 驅動） | **自研 narration 管線**（voiceover-pipeline.md + render-narration.sh），暫不走 HyperFrames——雙時間來源/字幕/TTS timeline 深度耦合自研 Stage；與「動畫預設 HyperFrames」兩行同時命中時按本行裁決 |
+| 帶解說長影片（Step 9.5，narration_stage 驅動） | **自研 narration 管線**（voiceover-pipeline.md + render-narration.sh），暫不走 HyperFrames——雙時間來源/字幕/旁白 timeline 深度耦合自研 Stage；與「動畫預設 HyperFrames」兩行同時命中時按本行裁決 |
 | 批次參數化影片（千人千面/模板換字） | Remotion（見規劃方向5，獨立於本 skill 主流程） |
 
 **設計語言永遠是甲方**：敘事結構、easing 體系、SFX/BGM 雙軌制照舊全部生效（animation-best-practices.md / audio-design-rules.md），HyperFrames 只是實作和渲染工具。GSAP 實作配方見 `references/gsap-recipes.md`。
