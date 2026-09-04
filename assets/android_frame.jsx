@@ -1,7 +1,7 @@
 /**
- * AndroidFrame — Android设备边框（参考Pixel 8系列）
+ * AndroidFrame — Android 裝置邊框（參考 Pixel 8 系列）
  *
- * 含：punch-hole相机 + 状态栏 + 导航栏 + 圆角
+ * 含：punch-hole 相機 + 狀態列 + 導覽列 + 圓角
  *
  * 用法：
  *   <AndroidFrame time="9:41" battery={85}>

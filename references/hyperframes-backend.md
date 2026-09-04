@@ -1,54 +1,54 @@
-# HyperFrames 渲染后端 · 选型边界与操作手册
+# HyperFrames 渲染後端 · 選型邊界與操作手冊
 
-> 2026-07-17 实测验证通过后引入（工具链/中文字体/代理环境/迁移/3D 五项全过，关键数据已内嵌本文）。
-> HyperFrames 是 HeyGen 开源的 HTML→视频框架（Apache 2.0）：纯 HTML + 暂停的 GSAP timeline，headless 浏览器逐帧 seek 确定性渲染。
+> 2026-07-17 實測驗證通過後引入（工具鏈/中文字型/代理環境/遷移/3D 五項全過，關鍵資料已內嵌本文）。
+> HyperFrames 是 HeyGen 開源的 HTML→影片框架（Apache 2.0）：純 HTML + 暫停的 GSAP timeline，headless 瀏覽器逐幀 seek 確定性渲染。
 
-## 选型边界（先看这张表再开工）
+## 選型邊界（先看這張表再開工）
 
-| 场景 | 用哪条渲染路线 |
+| 場景 | 用哪條渲染路線 |
 |---|---|
-| 新动画项目（默认） | **HyperFrames**。审计套件白送、3D/GSAP/Lottie/shader 全解锁 |
-| 需要 3D / 粒子 / 物理惯性 / shader 转场 | HyperFrames（自研 Stage 做不到） |
-| 老 Stage demo 要复用/改版 | 顺手迁移（适配器配方见下，20-30 分钟/个）；只重渲不改就仍用 render-video-seek.js |
-| 弱 runtime（无 npm / 无法装依赖 / 单文件交付给用户双击打开） | 自研 Stage（assets/animations.jsx），老流程不变 |
-| 交互演示（用户要在浏览器里玩，不导出视频） | 自研 Stage 或普通 HTML，HyperFrames 是渲染管线不是交互框架 |
-| 带解说长视频（Step 9.5，narration_stage 驱动） | **自研 narration 管线**（voiceover-pipeline.md + render-narration.sh），暂不走 HyperFrames——双时间源/字幕/TTS timeline 深度耦合自研 Stage；与「动画默认 HyperFrames」两行同时命中时按本行裁决 |
-| 批量参数化视频（千人千面/模板换字） | Remotion（见规划方向5，独立于本 skill 主流程） |
+| 新動畫專案（預設） | **HyperFrames**。審計套件白送、3D/GSAP/Lottie/shader 全解鎖 |
+| 需要 3D / 粒子 / 物理慣性 / shader 轉場 | HyperFrames（自研 Stage 做不到） |
+| 老 Stage demo 要複用/改版 | 順手遷移（介面卡配方見下，20-30 分鐘/個）；只重渲不改就仍用 render-video-seek.js |
+| 弱 runtime（無 npm / 無法裝依賴 / 單檔案交付給使用者雙擊開啟） | 自研 Stage（assets/animations.jsx），老流程不變 |
+| 互動演示（使用者要在瀏覽器裡玩，不匯出影片） | 自研 Stage 或普通 HTML，HyperFrames 是渲染管線不是互動框架 |
+| 帶解說長影片（Step 9.5，narration_stage 驅動） | **自研 narration 管線**（voiceover-pipeline.md + render-narration.sh），暫不走 HyperFrames——雙時間來源/字幕/TTS timeline 深度耦合自研 Stage；與「動畫預設 HyperFrames」兩行同時命中時按本行裁決 |
+| 批次參數化影片（千人千面/模板換字） | Remotion（見規劃方向5，獨立於本 skill 主流程） |
 
-**设计语言永远是甲方**：叙事结构、easing 体系、SFX/BGM 双轨制照旧全部生效（animation-best-practices.md / audio-design-rules.md），HyperFrames 只是实现和渲染工具。GSAP 实现配方见 `references/gsap-recipes.md`。
+**設計語言永遠是甲方**：敘事結構、easing 體系、SFX/BGM 雙軌制照舊全部生效（animation-best-practices.md / audio-design-rules.md），HyperFrames 只是實作和渲染工具。GSAP 實作配方見 `references/gsap-recipes.md`。
 
-## 项目脚手架
+## 專案腳手架
 
-> ⚠️ 安装预警：`hyperframes init` 除了生成项目文件，还会把 **19 个 hyperframes skill 安装到
-> `~/.claude/skills/`**（渲染后端的合成契约文档，纯文档无可执行 hook）。介意的话先跑
-> `npx hyperframes docs` 看本地文档清单再决定是否 init。
+> ⚠️ 安裝預警：`hyperframes init` 除了生成專案檔案，還會把 **19 個 hyperframes skill 安裝到
+> `~/.claude/skills/`**（渲染後端的合成契約文件，純文件無可執行 hook）。介意的話先跑
+> `npx hyperframes docs` 看本地文件清單再決定是否 init。
 
 ```bash
-npx -y hyperframes init 项目名 --example blank   # 非交互必须带 --example
-cd 项目名 && npm install
+npx -y hyperframes init 專案名 --example blank   # 非互動必須帶 --example
+cd 專案名 && npm install
 ```
 
-生成 index.html / hyperframes.json / meta.json / package.json（pin 了 CLI 版本）+ 项目级 CLAUDE.md。init 会把 19 个 hyperframes skill 装到 `~/.claude/skills/`（本机已装）。合成写法契约读 hyperframes-core skill 的 SKILL.md（init 装到各 runtime 的 skill 目录，Claude Code 默认 `~/.claude/skills/`；无 skill 机制的 runtime 直接读 `npx hyperframes docs` 本地文档替代），本地文档 `npx hyperframes docs <topic>`（data-attributes / gsap / rendering / troubleshooting）。
+生成 index.html / hyperframes.json / meta.json / package.json（pin 了 CLI 版本）+ 專案級 CLAUDE.md。init 會把 19 個 hyperframes skill 裝到 `~/.claude/skills/`（本機已裝）。合成寫法契約讀 hyperframes-core skill 的 SKILL.md（init 裝到各 runtime 的 skill 目錄，Claude Code 預設 `~/.claude/skills/`；無 skill 機制的 runtime 直接讀 `npx hyperframes docs` 本地文件替代），本地文件 `npx hyperframes docs <topic>`（data-attributes / gsap / rendering / troubleshooting）。
 
-**版本策略**：项目 package.json 会 pin 精确版本（当前实测过的是 0.7.61）。它迭代极快（300+ releases），升级先 `npx hyperframes@latest upgrade --project . --check` 看 delta，跑一遍回归 demo 再动。
+**版本策略**：專案 package.json 會 pin 精確版本（目前實測過的是 0.7.61）。它迭代極快（300+ releases），升級先 `npx hyperframes@latest upgrade --project . --check` 看 delta，跑一遍迴歸 demo 再動。
 
-## 合成契约速查（完整版读 hyperframes-core）
+## 合成契約速查（完整版讀 hyperframes-core）
 
 - 根容器：`data-composition-id` + `data-start` + `data-duration` + `data-width/height`
-- 每个计时元素：`class="clip"` + `data-start` + `data-duration` + `data-track-index`
-- timeline 必须 paused 并注册：`window.__timelines["合成id"] = gsap.timeline({paused:true})`
-- 视频素材用 `muted`，音轨单独 `<audio>` 元素
-- **只允许确定性逻辑**：禁 `Date.now()` / `Math.random()` / 运行时网络 fetch；随机用种子函数
-- 字体：Google Fonts 会被编译器自动抓取并注入确定性 @font-face（缓存 `~/.cache/hyperframes/fonts/`）；纯系统字体（PingFang SC 等）加一行 `@font-face { font-family:"PingFang SC"; src: local("PingFang SC"); }` 过 lint
-- Three.js 走 `hf-seek` 事件适配器（`~/.claude/skills/hyperframes-animation/adapters/three.md`），根容器必须显式 `data-duration`
+- 每個計時元素：`class="clip"` + `data-start` + `data-duration` + `data-track-index`
+- timeline 必須 paused 並註冊：`window.__timelines["合成id"] = gsap.timeline({paused:true})`
+- 影片素材用 `muted`，音軌單獨 `<audio>` 元素
+- **只允許確定性邏輯**：禁 `Date.now()` / `Math.random()` / 執行時網路 fetch；隨機用種子函式
+- 字型：Google Fonts 會被編譯器自動抓取並注入確定性 @font-face（快取 `~/.cache/hyperframes/fonts/`）；純系統字型（PingFang SC 等）加一行 `@font-face { font-family:"PingFang SC"; src: local("PingFang SC"); }` 過 lint
+- Three.js 走 `hf-seek` 事件介面卡（`~/.claude/skills/hyperframes-animation/adapters/three.md`），根容器必須顯式 `data-duration`
 
-## 老 demo 迁移 · 适配器配方（实测 20-30 分钟/个）
+## 老 demo 遷移 · 介面卡配方（實測 20-30 分鐘/個）
 
-自研 Stage/纯 render(t) 动画不用重写，四步：
+自研 Stage/純 render(t) 動畫不用重寫，四步：
 
-1. **包容器**：外套 `#root` 带合成 data 属性；整个 `.stage` 作为唯一 clip 最省事（`class="stage clip"` + data-start/duration/track-index）；`.stage` 从 fixed 居中改 absolute inset:0，html/body 定死 1920×1080
-2. **删自驱**：rAF tick 循环、fitStage/resize 监听、replay 按钮、`__ready/__setTime/__seek` 协议全删（渲染器不需要）
-3. **挂代理 tween**（核心 12 行）：
+1. **包容器**：外套 `#root` 帶合成 data 屬性；整個 `.stage` 作為唯一 clip 最省事（`class="stage clip"` + data-start/duration/track-index）；`.stage` 從 fixed 居中改 absolute inset:0，html/body 定死 1920×1080
+2. **刪自驅**：rAF tick 迴圈、fitStage/resize 監聽、replay 按鈕、`__ready/__setTime/__seek` 協議全刪（渲染器不需要）
+3. **掛代理 tween**（核心 12 行）：
    ```js
    const proxy = { t: 0 };
    const tl = gsap.timeline({ paused: true });
@@ -56,31 +56,31 @@ cd 项目名 && npm install
      onUpdate: () => render(proxy.t) }, 0);
    window.__timelines = window.__timelines || {};
    window.__timelines["main"] = tl;
-   render(0);   // 必须：timeline 停在 t=0 时 onUpdate 不触发，不补这句首帧可能未初始化
+   render(0);   // 必須：timeline 停在 t=0 時 onUpdate 不觸發，不補這句首幀可能未初始化
    ```
-4. **扫 transition**：全文搜 `transition:` 声明。CSS transition + class 切换走墙钟，逐帧 seek 下不确定，必须改成 render(t) 里对 t 的纯函数（lerp）
+4. **掃 transition**：全文搜 `transition:` 宣告。CSS transition + class 切換走牆鍾，逐幀 seek 下不確定，必須改成 render(t) 裡對 t 的純函式（lerp）
 
-## 校验与渲染
+## 校驗與渲染
 
 ```bash
-npm run check                        # lint+runtime+layout+motion+contrast 五门审计
-npx hyperframes check --no-contrast  # 暗色电影风专用（见下）
-npx -y hyperframes@<pin版本> render --fps 60   # 终渲；默认 30fps
+npm run check                        # lint+runtime+layout+motion+contrast 五門審計
+npx hyperframes check --no-contrast  # 暗色電影風專用（見下）
+npx -y hyperframes@<pin版本> render --fps 60   # 終渲；預設 30fps
 ```
 
-- **check 必须 0 error 才渲染**（contrast 门除外）。lint 能拦 letterSpacing 抖动、字体缺失、非确定性等一整类「无报警视觉 bug」
-- **contrast 门取舍**：它按 WCAG 4.5:1 检查，和暗色电影风的低对比水印/装饰文字（16-40% 透明度）根本冲突，且无逐元素豁免。暗色 cinematic 产出统一 `--no-contrast`，其余四门仍必须 0 error。亮底信息型产出不要跳，contrast 报错通常是真问题
-- **两级渲染**：先默认 30fps 快速出片，肉眼+截帧检查通过后再 `--fps 60` 终渲。60fps 600 帧 1080p 实测约 20 秒
-- 渲染产物侧校验（audio stream / 黑帧 / 响度 / 时长）用 `scripts/verify-video.sh`（见 verification.md）
+- **check 必須 0 error 才渲染**（contrast 門除外）。lint 能攔 letterSpacing 抖動、字型缺失、非確定性等一整類「無報警視覺 bug」
+- **contrast 門取捨**：它按 WCAG 4.5:1 檢查，和暗色電影風的低對比水印/裝飾文字（16-40% 透明度）根本衝突，且無逐元素豁免。暗色 cinematic 產出統一 `--no-contrast`，其餘四門仍必須 0 error。亮底資訊型產出不要跳，contrast 出錯通常是真問題
+- **兩級渲染**：先預設 30fps 快速出片，肉眼+截幀檢查通過後再 `--fps 60` 終渲。60fps 600 幀 1080p 實測約 20 秒
+- 渲染產物側校驗（audio stream / 黑幀 / 響度 / 時長）用 `scripts/verify-video.sh`（見 verification.md）
 
-## 透明通道（overlay花字/贴片直接叠剪辑轨）
+## 透明通道（overlay花字/貼片直接疊剪輯軌）
 
-`npx hyperframes render --format mov` 输出 ProRes 4444（yuva444p12le，带alpha，2026-07-17实测叠色底连软阴影都正确半透）；`--format webm` 同样带透明、体积小；`--format png-sequence` 出RGBA帧序列给AE/达芬奇。合成侧要点：html/body背景设 `transparent`、不铺底色。花字/角标/lower-third这类overlay素材从此直接进剪辑轨，不用抠像。注意MOV体积大（ProRes无损级，4秒15MB量级），交付剪辑用；网络传输用webm。
+`npx hyperframes render --format mov` 輸出 ProRes 4444（yuva444p12le，帶alpha，2026-07-17實測疊色底連軟陰影都正確半透）；`--format webm` 同樣帶透明、體積小；`--format png-sequence` 出RGBA幀序列給AE/達芬奇。合成側要點：html/body背景設 `transparent`、不鋪底色。花字/角標/lower-third這類overlay素材從此直接進剪輯軌，不用摳像。注意MOV體積大（ProRes無損級，4秒15MB量級），交付剪輯用；網路傳輸用webm。
 
-## 音频
+## 音訊
 
-HyperFrames 合成里 `<audio>` 元素可直接进时间轴（BGM/解说随片渲染）。当前音频流程不变：SFX/BGM 双轨制照 audio-design-rules.md，用 add-music.sh / mix-voiceover.sh 后期混流也可以。哪条路更好在实战中定，先不强制。SFX打点用 `scripts/sfx-cues.sh <视频> <cue表.tsv> <输出>`（cue表=秒数/sfx路径/音量dB三列，B00实战沉淀，改表重跑10秒出片）。
+HyperFrames 合成裡 `<audio>` 元素可直接進時間軸（BGM/解說隨片渲染）。目前音訊流程不變：SFX/BGM 雙軌制照 audio-design-rules.md，用 add-music.sh / mix-voiceover.sh 後製混音也可以。哪條路更好在實戰中定，先不強制。SFX打點用 `scripts/sfx-cues.sh <影片> <cue表.tsv> <輸出>`（cue表=秒數/sfx路徑/音量dB三列，B00實戰沉澱，改表重跑10秒出片）。
 
-## pitfalls 增量（相对自研管线）
+## pitfalls 增量（相對自研管線）
 
-自研管线 pitfalls（animation-pitfalls.md §7/10/12/13 录制协议类、§6 字体时序、§15/17 网络类）在 HyperFrames 后端上**不适用**：录制协议由框架内部处理，字体编译期抓取，CDN 实测代理下可通。新增的坑共四条，已录入 animation-pitfalls.md §18-21：CSS transition 非确定性、代理 tween 首帧、contrast 门冲突、fromTo immediateRender 幻影。
+自研管線 pitfalls（animation-pitfalls.md §7/10/12/13 錄製協議類、§6 字型時序、§15/17 網路類）在 HyperFrames 後端上**不適用**：錄製協議由框架內部處理，字型編譯期抓取，CDN 實測代理下可通。新增的坑共四條，已錄入 animation-pitfalls.md §18-21：CSS transition 非確定性、代理 tween 首幀、contrast 門衝突、fromTo immediateRender 幻影。

@@ -1,28 +1,28 @@
 #!/usr/bin/env node
 /**
- * export_deck_pptx.mjs — 把多文件 slide deck 导出为可编辑 PPTX
+ * export_deck_pptx.mjs — 把多檔案 slide deck 匯出為可編輯 PPTX
  *
  * 用法：
  *   node export_deck_pptx.mjs --slides <dir> --out <file.pptx> [--allow-network]
  *
- * 行为：
- *   - 调用 scripts/html2pptx.js 把 HTML DOM 逐元素翻译成 PowerPoint 原生对象
- *   - 文字是真文本框，PPT 里直接双击能编辑
+ * 行為：
+ *   - 呼叫 scripts/html2pptx.js 把 HTML DOM 逐元素翻譯成 PowerPoint 原生物件
+ *   - 文字是真文字框，PPT 裡直接雙擊能編輯
  *   - body 尺寸 960pt × 540pt（LAYOUT_WIDE，13.333″ × 7.5″）
  *
- * ⚠️ HTML 必须符合 4 条硬约束（见 references/editable-pptx.md）：
- *   1. 文字包在 <p>/<h1>-<h6> 里（div 不能直接放文字）
- *   2. 不用 CSS 渐变
- *   3. <p>/<h*> 不能有 background/border/shadow（放外层 div）
+ * ⚠️ HTML 必須符合 4 條硬約束（見 references/editable-pptx.md）：
+ *   1. 文字包在 <p>/<h1>-<h6> 裡（div 不能直接放文字）
+ *   2. 不用 CSS 漸變
+ *   3. <p>/<h*> 不能有 background/border/shadow（放外層 div）
  *   4. div 不能 background-image（用 <img>）
  *
- * 视觉驱动的 HTML 几乎无法 pass —— 必须从写 HTML 的第一行就按约束写。
- * 视觉自由度优先的场景（动画、web component、CSS 渐变、复杂 SVG）
- * 应改用 export_deck_pdf.mjs / export_deck_stage_pdf.mjs 导出 PDF。
+ * 視覺驅動的 HTML 幾乎無法 pass —— 必須從寫 HTML 的第一行就按約束寫。
+ * 視覺自由度優先的場景（動畫、web component、CSS 漸變、複雜 SVG）
+ * 應改用 export_deck_pdf.mjs / export_deck_stage_pdf.mjs 匯出 PDF。
  *
- * 依赖：npm install playwright pptxgenjs sharp
+ * 依賴：npm install playwright pptxgenjs sharp
  *
- * 按文件名排序（01-xxx.html → 02-xxx.html → ...）。
+ * 按檔名排序（01-xxx.html → 02-xxx.html → ...）。
  */
 
 import fs from 'fs/promises';
@@ -45,8 +45,8 @@ function parseArgs() {
   if (!args.slides || !args.out) {
     console.error('用法: node export_deck_pptx.mjs --slides <dir> --out <file.pptx> [--allow-network]');
     console.error('');
-    console.error('⚠️ HTML 必须符合 4 条硬约束（见 references/editable-pptx.md）。');
-    console.error('   视觉自由度优先的场景请改用 export_deck_pdf.mjs 导出 PDF。');
+    console.error('⚠️ HTML 必須符合 4 條硬約束（見 references/editable-pptx.md）。');
+    console.error('   視覺自由度優先的場景請改用 export_deck_pdf.mjs 匯出 PDF。');
     process.exit(1);
   }
   return args;
@@ -72,8 +72,8 @@ async function main() {
     const module = await import('pptxgenjs');
     PptxGenJS = module.default ?? module;
   } catch (e) {
-    console.error(`✗ 缺少可选依赖 pptxgenjs：${e.message}`);
-    console.error('  仅在需要可编辑 PPTX 导出时安装：npm install --no-save pptxgenjs@4.0.1');
+    console.error(`✗ 缺少可選依賴 pptxgenjs：${e.message}`);
+    console.error('  僅在需要可編輯 PPTX 匯出時安裝：npm install --no-save pptxgenjs@4.0.1');
     process.exit(1);
   }
 
@@ -83,13 +83,13 @@ async function main() {
   try {
     html2pptx = require(path.join(__dirname, 'html2pptx.js'));
   } catch (e) {
-    console.error(`✗ 加载 html2pptx.js 失败：${e.message}`);
-    console.error(`  依赖缺失时请跑：npm install playwright sharp`);
+    console.error(`✗ 載入 html2pptx.js 失敗：${e.message}`);
+    console.error(`  依賴缺失時請跑：npm install playwright sharp`);
     process.exit(1);
   }
 
   const pres = new PptxGenJS();
-  pres.layout = 'LAYOUT_WIDE';  // 13.333 × 7.5 inch，对应 HTML body 960 × 540 pt
+  pres.layout = 'LAYOUT_WIDE';  // 13.333 × 7.5 inch，對應 HTML body 960 × 540 pt
 
   const errors = [];
   for (let i = 0; i < files.length; i++) {
@@ -105,16 +105,16 @@ async function main() {
   }
 
   if (errors.length) {
-    console.error(`\n⚠️ ${errors.length} 张 slide 转换失败。常见原因：HTML 不符合 4 条硬约束。`);
-    console.error(`  详见 references/editable-pptx.md 的「常见错误速查」。`);
+    console.error(`\n⚠️ ${errors.length} 張 slide 轉換失敗。常見原因：HTML 不符合 4 條硬約束。`);
+    console.error(`  詳見 references/editable-pptx.md 的「常見錯誤速查」。`);
     if (errors.length === files.length) {
-      console.error(`✗ 全部失败，不生成 PPTX。`);
+      console.error(`✗ 全部失敗，不產生 PPTX。`);
       process.exit(1);
     }
   }
 
   await pres.writeFile({ fileName: outFile });
-  console.log(`\n✓ Wrote ${outFile}  (${files.length - errors.length}/${files.length} slides, 可编辑 PPTX)`);
+  console.log(`\n✓ Wrote ${outFile}  (${files.length - errors.length}/${files.length} slides, 可編輯 PPTX)`);
 }
 
 main().catch(e => { console.error(e); process.exit(1); });

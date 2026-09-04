@@ -1,16 +1,16 @@
 /**
- * <deck-stage> — HTML幻灯片外壳web component
+ * <deck-stage> — HTML 投影片外殼 web component
  *
  * 提供功能：
- * - 固定尺寸canvas（默认1920×1080）+ auto-scale + letterbox
- * - 键盘导航（←/→/Space/Home/End/Esc）
- * - 左右点击区域导航
- * - slide counter (当前/总数)
- * - localStorage持久化当前slide
- * - Speaker notes postMessage (支持外层渲染)
- * - Hash导航 (#slide-5 跳到第5张)
- * - Print-to-PDF支持 (Cmd+P / Ctrl+P 一页一slide)
- * - 自动给每个slide添加 data-screen-label
+ * - 固定尺寸 canvas（預設 1920×1080）+ auto-scale + letterbox
+ * - 鍵盤導覽（←/→/Space/Home/End/Esc）
+ * - 左右點選區域導覽
+ * - slide counter（目前／總數）
+ * - localStorage 持續儲存目前 slide
+ * - Speaker notes postMessage (支援外層渲染)
+ * - Hash 導覽（#slide-5 跳到第 5 張）
+ * - Print-to-PDF 支援（Cmd+P / Ctrl+P，每頁一張 slide）
+ * - 自動為每張 slide 新增 data-screen-label
  *
  * 用法：
  *   <deck-stage>
@@ -18,7 +18,7 @@
  *     <section>Slide 2</section>
  *   </deck-stage>
  *
- * 自定义尺寸：
+ * 自訂尺寸：
  *   <deck-stage width="1080" height="1920">...</deck-stage>
  *
  * Speaker notes：在<head>加
@@ -43,12 +43,12 @@
       this._width = parseInt(this.getAttribute('width')) || 1920;
       this._height = parseInt(this.getAttribute('height')) || 1080;
 
-      // Shadow DOM 先渲染（独立于子节点，不受 parser 时机影响）
+      // Shadow DOM 先渲染（獨立於子節點，不受 parser 時機影響）
       this._render();
 
-      // 防御：若 script 放在 <head> 里（而非 </deck-stage> 之后），
-      // parser 此刻可能还没处理完子 <section>，querySelectorAll 会返回空。
-      // 延迟到下一个事件循环，确保子节点都已 parse 完毕。
+      // 防禦：若 script 放在 <head> 裡（而非 </deck-stage> 之後），
+      // parser 此刻可能還沒處理完子 <section>，querySelectorAll 會回傳空值。
+      // 延遲到下一個事件迴圈，確保子節點都已 parse 完畢。
       const init = () => {
         this._collectSlides();
         this._setupEventListeners();
@@ -58,10 +58,10 @@
       };
 
       if (this.ownerDocument.readyState === 'loading') {
-        // 文档还在 parse，等 DOMContentLoaded 一次搞定所有 section
+        // 文件還在 parse，等 DOMContentLoaded 一次搞定所有 section
         this.ownerDocument.addEventListener('DOMContentLoaded', init, { once: true });
       } else {
-        // 文档已 parse 完（script 在 body 底部或 defer），下一帧收集即可
+        // 文件已 parse 完（script 在 body 底部或 defer），下一幀收集即可
         requestAnimationFrame(init);
       }
     }

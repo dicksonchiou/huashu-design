@@ -1,5 +1,5 @@
 /**
- * MacosWindow — macOS应用窗口边框（含traffic lights）
+ * MacosWindow — macOS 應用程式視窗邊框（含 traffic lights）
  *
  * 用法：
  *   <MacosWindow title="Finder">

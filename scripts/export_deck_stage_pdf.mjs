@@ -1,31 +1,31 @@
 #!/usr/bin/env node
 /**
- * export_deck_stage_pdf.mjs — 单文件 <deck-stage> 架构专用 PDF 导出
+ * export_deck_stage_pdf.mjs — 單檔案 <deck-stage> 架構專用 PDF 匯出
  *
  * 用法：
  *   node export_deck_stage_pdf.mjs --html <deck.html> --out <file.pdf> [--width 1920] [--height 1080] [--allow-network]
  *
- * 什么时候用这个脚本？
- *   - 你的 deck 是**单 HTML 文件**，所有 slide 是 `<section>`，外层用 `<deck-stage>` 包裹
- *   - 此时 `export_deck_pdf.mjs`（多文件专用）用不上
+ * 什麼時候用這個指令碼？
+ *   - 你的 deck 是**單 HTML 檔案**，所有 slide 是 `<section>`，外層用 `<deck-stage>` 包裹
+ *   - 此時 `export_deck_pdf.mjs`（多檔案專用）用不上
  *
- * 为什么不能直接 `page.pdf()`（2026-04-20 踩坑记录）：
- *   1. deck-stage 的 shadow CSS `::slotted(section) { display: none }` 让只有 active slide 可见
- *   2. print 媒体下外层 `!important` 压不住 shadow DOM 规则
- *   3. 结果：PDF 永远只有 1 页（active 那张）
+ * 為什麼不能直接 `page.pdf()`（2026-04-20 踩坑記錄）：
+ *   1. deck-stage 的 shadow CSS `::slotted(section) { display: none }` 讓只有 active slide 可見
+ *   2. print 媒體下外層 `!important` 壓不住 shadow DOM 規則
+ *   3. 結果：PDF 永遠只有 1 頁（active 那張）
  *
- * 解决方案：
- *   打开 HTML 后，用 page.evaluate 把所有 section 从 deck-stage slot 拔出来，
- *   挂到 body 下一个普通 div，内联 style 强制 position:relative + 固定尺寸，
- *   每个 section 加 page-break-after: always，最后一个改 auto 避免尾部空白页。
+ * 解決方案：
+ *   開啟 HTML 後，用 page.evaluate 把所有 section 從 deck-stage slot 拔出來，
+ *   掛到 body 下一個普通 div，內聯 style 強制 position:relative + 固定尺寸，
+ *   每個 section 加 page-break-after: always，最後一個改 auto 避免尾部空白頁。
  *
- * 依赖：playwright
+ * 依賴：playwright
  *   npm install playwright
  *
- * 输出特点：
- *   - 文字保留矢量（可复制、可搜索）
- *   - 视觉 1:1 保真
- *   - 字体必须能被 Chromium 加载（本地字体或 Google Fonts）
+ * 輸出特點：
+ *   - 文字保留向量（可複製、可搜尋）
+ *   - 視覺 1:1 保真
+ *   - 字型必須能被 Chromium 載入（本機字型或 Google Fonts）
  */
 
 import { chromium } from 'playwright';
@@ -78,14 +78,14 @@ async function main() {
   await page.goto('file://' + htmlAbs, { waitUntil: 'networkidle' });
   await page.waitForTimeout(2500);  // 等 Google Fonts + deck-stage init
 
-  // 核心修复：把 section 从 shadow DOM slot 拔出来摊平
+  // 核心修復：把 section 從 shadow DOM slot 拔出來攤平
   const sectionCount = await page.evaluate(({ W, H }) => {
     const stage = document.querySelector('deck-stage');
-    if (!stage) throw new Error('<deck-stage> not found — 这个脚本只适用于单文件 deck-stage 架构');
+    if (!stage) throw new Error('<deck-stage> not found — 這個指令碼只適用於單檔案 deck-stage 架構');
     const sections = Array.from(stage.querySelectorAll(':scope > section'));
     if (!sections.length) throw new Error('No <section> found inside <deck-stage>');
 
-    // 注入打印样式
+    // 注入列印樣式
     const style = document.createElement('style');
     style.textContent = `
       @page { size: ${W}px ${H}px; margin: 0; }
@@ -94,11 +94,11 @@ async function main() {
     `;
     document.head.appendChild(style);
 
-    // 摊平到 body 下
+    // 攤平到 body 下
     const container = document.createElement('div');
     container.id = 'print-container';
     sections.forEach(s => {
-      // 内联 style 拿到最高优先级；确保 position:relative 让 absolute 子元素正确约束
+      // 內聯 style 拿到最高優先順序；確保 position:relative 讓 absolute 子元素正確約束
       s.style.cssText = `
         width: ${W}px !important;
         height: ${H}px !important;
@@ -112,7 +112,7 @@ async function main() {
       `;
       container.appendChild(s);
     });
-    // 最后一页不分页，避免尾部空白页
+    // 最後一頁不分頁，避免尾部空白頁
     const last = sections[sections.length - 1];
     last.style.pageBreakAfter = 'auto';
     last.style.breakAfter = 'auto';
@@ -135,7 +135,7 @@ async function main() {
   const stat = await fs.stat(outFile);
   const kb = (stat.size / 1024).toFixed(0);
   console.log(`\n✓ Wrote ${outFile}  (${kb} KB, ${sectionCount} pages, vector)`);
-  console.log(`  验证页数：mdimport "${outFile}" && pdfinfo "${outFile}" | grep Pages`);
+  console.log(`  驗證頁數：mdimport "${outFile}" && pdfinfo "${outFile}" | grep Pages`);
 }
 
 main().catch(e => { console.error(e); process.exit(1); });

@@ -6,17 +6,17 @@
 # ]
 # ///
 """
-verify.py — Playwright封装，用于验证claude-design产出的HTML
+verify.py — Playwright封裝，用於驗證claude-design產出的HTML
 
 Usage:
-    python verify.py path/to/design.html                    # 基础：打开+截图+抓控制台错误
+    python verify.py path/to/design.html                    # 基礎：開啟+截圖+抓控制檯錯誤
     python verify.py design.html --viewports 1920x1080,375x667  # 多viewport
-    python verify.py deck.html --slides 10                  # 幻灯片逐页截（前10张）
-    python verify.py design.html --output ./screenshots/   # 输出目录
-    python verify.py design.html --show                    # 非headless，打开真实浏览器
+    python verify.py deck.html --slides 10                  # 投影片逐頁截（前10張）
+    python verify.py design.html --output ./screenshots/   # 輸出目錄
+    python verify.py design.html --show                    # 非headless，開啟真實瀏覽器
     python verify.py design.html --allow-network           # 可信 HTML 明確允許遠端資源
 
-依赖：
+依賴：
     pip install playwright
     playwright install chromium
 """
@@ -39,13 +39,13 @@ def verify_html(html_path, viewports=None, slides=0, output_dir=None, show=False
     try:
         from playwright.sync_api import sync_playwright
     except ImportError:
-        print("ERROR: playwright未安装。")
-        print("运行: pip install playwright && playwright install chromium")
+        print("ERROR: playwright未安裝。")
+        print("執行: pip install playwright && playwright install chromium")
         sys.exit(1)
 
     html_path = Path(html_path).resolve()
     if not html_path.exists():
-        print(f"ERROR: 文件不存在: {html_path}")
+        print(f"ERROR: 檔案不存在: {html_path}")
         sys.exit(1)
 
     if output_dir is None:
@@ -88,7 +88,7 @@ def verify_html(html_path, viewports=None, slides=0, output_dir=None, show=False
             page.on("console", lambda msg: console_errors.append(f"[{msg.type}] {msg.text}") if msg.type in ("error", "warning") else None)
             page.on("pageerror", lambda err: page_errors.append(str(err)))
 
-            print(f"\n→ 打开 {file_url} @ {viewport['width']}x{viewport['height']}")
+            print(f"\n→ 開啟 {file_url} @ {viewport['width']}x{viewport['height']}")
             page.goto(file_url, wait_until='networkidle')
             page.wait_for_timeout(wait)
 
@@ -105,14 +105,14 @@ def verify_html(html_path, viewports=None, slides=0, output_dir=None, show=False
                 suffix = f"-{viewport['width']}x{viewport['height']}" if len(viewports) > 1 else ""
                 screenshot_path = output_dir / f"{stem}{suffix}.png"
                 page.screenshot(path=str(screenshot_path), full_page=False)
-                print(f"  ✓ 截图 → {screenshot_path.name}")
+                print(f"  ✓ 截圖 → {screenshot_path.name}")
 
                 full_path = output_dir / f"{stem}{suffix}-full.png"
                 page.screenshot(path=str(full_path), full_page=True)
-                print(f"  ✓ 完整页 → {full_path.name}")
+                print(f"  ✓ 完整頁 → {full_path.name}")
 
             if show:
-                print("  (浏览器窗口保持打开，按Enter关闭...)")
+                print("  (瀏覽器視窗保持開啟，按Enter關閉...)")
                 input()
 
             context.close()
@@ -120,7 +120,7 @@ def verify_html(html_path, viewports=None, slides=0, output_dir=None, show=False
         browser.close()
 
     print("\n" + "=" * 50)
-    print("验证报告")
+    print("驗證報告")
     print("=" * 50)
 
     if page_errors:
@@ -128,18 +128,18 @@ def verify_html(html_path, viewports=None, slides=0, output_dir=None, show=False
         for e in page_errors:
             print(f"  - {e}")
     else:
-        print("\n✅ 无JavaScript错误")
+        print("\n✅ 無JavaScript錯誤")
 
     if console_errors:
         print(f"\n⚠️  Console Errors/Warnings ({len(console_errors)}):")
         for e in console_errors[:20]:
             print(f"  - {e}")
         if len(console_errors) > 20:
-            print(f"  ... 还有{len(console_errors) - 20}条")
+            print(f"  ... 還有{len(console_errors) - 20}條")
     else:
-        print("✅ Console干净")
+        print("✅ Console乾淨")
 
-    print(f"\n📸 截图保存至: {output_dir}")
+    print(f"\n📸 截圖儲存至: {output_dir}")
 
     return 0 if not page_errors else 1
 
@@ -151,15 +151,15 @@ def main():
     )
     parser.add_argument("html_path", help="HTML file path")
     parser.add_argument("--viewports", default="1440x900",
-                        help="逗号分隔的viewport列表，格式 WxH（默认 1440x900）")
+                        help="逗號分隔的viewport列表，格式 WxH（預設 1440x900）")
     parser.add_argument("--slides", type=int, default=0,
-                        help="幻灯片模式：截取前N张（需要HTML支持ArrowRight翻页）")
+                        help="投影片模式：擷取前N張（需要HTML支援ArrowRight翻頁）")
     parser.add_argument("--output", default=None,
-                        help="输出目录（默认HTML所在目录的screenshots/）")
+                        help="輸出目錄（預設HTML所在目錄的screenshots/）")
     parser.add_argument("--show", action="store_true",
-                        help="非headless，打开真实浏览器窗口")
+                        help="非headless，開啟真實瀏覽器視窗")
     parser.add_argument("--wait", type=int, default=2000,
-                        help="打开页面后等待的毫秒数（默认2000）")
+                        help="開啟頁面後等待的毫秒數（預設2000）")
     parser.add_argument("--allow-network", action="store_true",
                         help="明確允許 HTML 載入遠端 HTTP(S)/WebSocket 資源（預設阻擋）")
 

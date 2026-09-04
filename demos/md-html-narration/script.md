@@ -1,69 +1,69 @@
 ---
-title: md还是html，这是个蠢问题
+title: md還是html，這是個蠢問題
 gap: 0.5
 ---
 
 ## opening
-前两天，[[cue:thariq]]Claude Code 团队的 Thariq 发了篇爆文。
-标题就一句话，HTML 是新的 markdown。
-他说他几乎不再写 md 文件了，全让 AI 给他生成 HTML。
-500 万阅读，X 上立马吵翻了。
-一派是 md 党，[[cue:two-camps]]觉得 md 才是 AI 时代的源代码。
-另一派觉得 Thariq 说得对，HTML 才是终极答案。
+前兩天，[[cue:thariq]]Claude Code 團隊的 Thariq 發表了一篇熱門文章。
+標題就一句話，HTML 是新的 markdown。
+他說他幾乎不再寫 md 檔案了，全都交給 AI 產生 HTML。
+500 萬閱讀，X 上馬上吵翻了。
+一派是 md 黨，[[cue:two-camps]]覺得 md 才是 AI 時代的原始碼。
+另一派覺得 Thariq 說得對，HTML 才是終極答案。
 
 ## md-side
-md 党的证据其实挺硬的。
-你看 OpenAI 去年发的 AGENTS.md，[[cue:agents-md]]60000 多个项目用，AWS、Anthropic、Google、微软、OpenAI，AI 半壁江山一起捐进 Linux Foundation 做开放标准。
-Karpathy 的 llm-wiki，主体就是三层 markdown，单一个 CLAUDE.md 文件，5 万 star。
-Cloudflare 实测过一组数据，[[cue:token-saving]]同一篇博客，HTML 一万六千 token，转成 md 只要三千。
+md 黨的證據其實很有說服力。
+你看 OpenAI 去年發的 AGENTS.md，[[cue:agents-md]]60000 多個專案用，AWS、Anthropic、Google、微軟、OpenAI，AI 界的半壁江山一起捐給 Linux Foundation 做開放標準。
+Karpathy 的 llm-wiki，主體就是三層 markdown，單一個 CLAUDE.md 檔案，5 萬 star。
+Cloudflare 實測過一組資料，[[cue:token-saving]]同一篇部落格，HTML 一萬六千 token，轉成 md 只要三千。
 省 80%。
-GitHub 官方也讲过一句，文档不再是描述代码，[[cue:doc-is-code]]文档就是代码。
+GitHub 官方也講過一句，檔案不再是描述程式碼，[[cue:doc-is-code]]檔案就是程式碼。
 
 ## html-side
-但 html 党也没说错。
-Thariq 那篇文章里几条论据我都同意。
-第一是空间信息。[[cue:spatial]]diff、调用图、架构图，本来就是有空间维度的，md 把它压成一行字，html 能左右对照，理解效率不是一个量级的。
-第二是动态体验。[[cue:dynamic]]做产品原型，按钮按下去什么颜色、什么 easing 曲线，文字描述再多没用，html 能让你直接看见。
-第三是结构化阅读。[[cue:structured]]可折叠章节、tab 代码块、边栏术语表，跟同样的字线性堆一遍是两种东西。
-Anthropic 现在的 Live Artifacts，HTML 已经从静态产物升级成可以交互、能拉实时数据的 dashboard。
+但 html 黨也沒說錯。
+Thariq 那篇文章裡幾條論據我都同意。
+第一是空間資訊。[[cue:spatial]]diff、呼叫圖、架構圖，本來就是有空間維度的，md 把它壓成一行字，html 能左右對照，理解效率根本不在同一個層級。
+第二是動態體驗。[[cue:dynamic]]做產品原型，按下按鈕會呈現什麼顏色、什麼 easing 曲線，文字描述再多沒用，html 能讓你直接看見。
+第三是結構化閱讀。[[cue:structured]]可摺疊章節、tab 程式碼區塊、邊欄術語表，把同樣的文字線性堆疊，完全是兩種東西。
+Anthropic 現在的 Live Artifacts，HTML 已經從靜態產物升級成可以互動、能抓取即時資料的 dashboard。
 
 ## the-real-question
-我看完想说，[[cue:reveal]]这俩根本是在争一个蠢问题。
-两边都赢了。
-但赢的是不同的问题。
-md 党回答的是，[[cue:question-md]]我们用什么写。
-html 党回答的是，[[cue:question-html]]我们给人什么看。
-这是两个问题。
-怎么会有谁取代谁。
+我看完想說，[[cue:reveal]]這兩個根本是在爭一個蠢問題。
+兩邊都贏了。
+但贏的是不同的問題。
+md 黨回答的是，[[cue:question-md]]我們用什麼寫。
+html 黨回答的是，[[cue:question-html]]我們給人什麼看。
+這是兩個問題。
+怎麼會有誰取代誰。
 
 ## the-split
-我觉得真问题是这个。
-md 和 html 不是替代关系，[[cue:split]]是分工关系。
-以前你写 md 自己也看 md。
-那时候要折中，所以 md 胜出。
-但 AI 出现后，[[cue:ai-changes]]第一次有了一个新情况。
-生产成本可以被 AI 吸收。
-HTML 那部分太重的代价，AI 替你扛。
-你只负责消费。
-原来要折中的需求，被拆成了两端的极端最优。
-生产端要轻、要快、要 token efficient，[[cue:md-side-win]]那就是 md。
-消费端要丰富、要可视化、要好分享，[[cue:html-side-win]]那就是 html。
-两端各自登顶。
-中间那个折中位置，没人需要了。
+我覺得真問題是這個。
+md 和 html 不是取代關係，[[cue:split]]是分工關係。
+以前你寫 md 自己也看 md。
+那時候要折衷，所以 md 勝出。
+但 AI 出現後，[[cue:ai-changes]]第一次有了一個新情況。
+生產成本可以被 AI 吸收。
+HTML 那部分太重的代價，AI 替你扛。
+你只負責消費。
+原來要折衷的需求，被拆成了兩端各自的最佳解。
+生產端要輕、要快、要 token efficient，[[cue:md-side-win]]那就是 md。
+消費端要豐富、要視覺化、要容易分享，[[cue:html-side-win]]那就是 html。
+兩端各自登頂。
+中間的折衷位置，沒人需要了。
 
 ## activity-proof
-最干净的活样本是 Thariq 自己。
-3 月份他发了篇 Skills 指南，[[cue:thariq-march]]强调核心还是 markdown。
-5 月份他发了 HTML 是新 markdown。
-同一个人，[[cue:same-person]]两端各自登顶，互不打架。
-Karpathy 和 Lex Fridman 那对组合也一样。
-内核是 markdown wiki，[[cue:karpathy-lex]]外壳是动态 HTML。
-不是 Lex 替换了 Karpathy，是他在 Karpathy 的基础上加了一层消费层。
+最乾淨的實際案例是 Thariq 自己。
+3 月他發表了《Skills 指南》，[[cue:thariq-march]]強調核心還是 markdown。
+5 月他發表了《HTML is the new markdown》。
+同一個人，[[cue:same-person]]兩端各自登頂，互不衝突。
+Karpathy 和 Lex Fridman 這組搭配也一樣。
+核心是 markdown wiki，[[cue:karpathy-lex]]外殼是動態 HTML。
+不是 Lex 取代了 Karpathy，是他在 Karpathy 的基礎上加了一層消費層。
 
 ## closing
-所以下次你想吵这个的时候，[[cue:final]]先问自己一句。
-你现在面对的是「写」，还是「看」。
-写，[[cue:md-final]]用 md。
+所以下次你想吵這個的時候，[[cue:final]]先問自己一句。
+你現在面對的是「寫」，還是「看」。
+寫，[[cue:md-final]]用 md。
 看，[[cue:html-final]]用 html。
-工具替你处理切换。
-立场可以放下了。
+工具替你處理切換。
+立場可以放下了。

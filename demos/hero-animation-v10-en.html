@@ -15,10 +15,10 @@
     --muted: rgba(255,255,255,0.40);
     --dim: rgba(255,255,255,0.18);
     --hairline: rgba(255,255,255,0.12);
-    --accent: #D97757;          /* terracotta — 致敬 Anthropic 血统 */
+    --accent: #D97757;          /* terracotta — 致敬 Anthropic 血統 */
     --accent-deep: #B85D3D;
 
-    /* Claude Design palette — Act 0 专用 */
+    /* Claude Design palette — Act 0 專用 */
     --cd-bg: #F5F4F0;
     --cd-panel: #FFFFFF;
     --cd-ink: #1A1918;
@@ -388,7 +388,7 @@
   }
   .watermark.visible { opacity: 1; }
 
-  /* ============ Act 0 — Claude Design 致敬（+讽刺） ============ */
+  /* ============ Act 0 — Claude Design 致敬（+諷刺） ============ */
   .act0 {
     background: #0a0a0a;
   }
@@ -940,7 +940,7 @@
   <div class="scene act3" id="act3Brand">
     <div class="brand-wordmark" id="wordmark">huashu<span class="accent">-</span>design</div>
     <div class="farewell-quote" id="farewell">For them, we built this.</div>
-    <div class="farewell-cn" id="farewellCn">· 为 他 们 · 我 们 造 了 这 个 ·</div>
+    <div class="farewell-cn" id="farewellCn">· 為 他 們 · 我 們 造 了 這 個 ·</div>
     <div class="brand-url" id="url">huasheng.ai/huashu-design-hero</div>
   </div>
 
@@ -967,7 +967,7 @@
     'preview-25-consciousness-prob.png','preview-26-divider-4.png','preview-27-cot-faithfulness.png','preview-28-alignment-faking.png',
     'preview-29-divider-5.png','preview-30-open-questions.png','preview-31-giving-back.png','preview-32-closing.png',
   ];
-  const BASE = '../../../2026.04-AI心理学/演讲PPT-北大/';
+  const BASE = '../../../2026.04-AI心理學/演講PPT-北大/';
 
   // ---------- Build gallery ----------
   const COLS = 8, ROWS = 6, COUNT = COLS * ROWS;
@@ -1015,11 +1015,11 @@
 
     // ===== Act 0: Claude Design 致敬 (0 - 4s) =====
     a0_in:   [0.3, 1.2],       // browser fade + scale in
-    a0_hold: [1.2, 3.4],       // tweaks 自动动
-    a0_out:  [3.4, 4.0],       // browser 退场
+    a0_hold: [1.2, 3.4],       // tweaks 自動移動
+    a0_out:  [3.4, 4.0],       // browser 退場
 
-    cd_tweak_anim: [1.4, 3.3], // tweaks thumb 自动拖动窗口
-    cd_accent_switch: [2.1, 2.5], // accent color dot 切换到深绿
+    cd_tweak_anim: [1.4, 3.3], // tweaks thumb 自動拖曳視窗
+    cd_accent_switch: [2.1, 2.5], // accent color dot 切換到深綠
 
     cd_caption_in:  [1.6, 2.2],
     cd_caption_hold:[2.2, 3.3],
@@ -1116,7 +1116,7 @@
   const urlEl = document.getElementById('url');
   const watermark = document.getElementById('watermark');
 
-  const COMMAND = '/huashu-design 做一份发布会PPT';
+  const COMMAND = '/huashu-design 做一份發表會 PPT';
 
   // ---------- Gallery transforms ----------
   const GALLERY_TILT = 'perspective(2400px) rotateX(14deg) rotateY(-10deg) rotateZ(-2deg)';
@@ -1161,7 +1161,7 @@
       cdBrowser.style.transform = `translate(-50%, -50%) scale(${finalScale})`;
       cdBrowser.style.filter = blurOut > 0.1 ? `blur(${blurOut}px)` : '';
 
-      // Tweaks thumb 自动拖动（模拟用户在调节）
+      // Tweaks thumb 自動拖曳（模擬使用者在調整）
       const tw = clampLerp(t, T.cd_tweak_anim[0], T.cd_tweak_anim[1]);
       // Headline slider: 58% → 72% → 62%
       let headlinePct;
@@ -1172,12 +1172,12 @@
       const densityPct = 40 + 15 * easeInOut(tw);
       cdThumb2.style.left = densityPct + '%';
 
-      // Accent 从橙切换到深绿（模拟用户在选色）
+      // Accent 從橙切換到深綠（模擬使用者在選色）
       const switched = t >= T.cd_accent_switch[0];
       if (switched) {
         cdDot1.classList.add('active');
         cdDot2.classList.remove('active');
-        // Poster 颜色跟着变
+        // Poster 顏色跟著變
         cdPoster.style.background = 'var(--cd-green)';
       } else {
         cdDot1.classList.remove('active');

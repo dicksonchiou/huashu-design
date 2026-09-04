@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-Hant-TW">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>什么是 token · narration demo</title>
+<title>什麼是 token · narration demo</title>
 <script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" integrity="sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" integrity="sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
@@ -19,16 +19,16 @@
 <script type="text/babel">
 // ── timeline.json (inline) ─────────────────────────────────
 const TIMELINE = {
-  "title": "什么是 token",
+  "title": "什麼是 token",
   "voice": null,
   "speed": 1,
   "gap": 0.4,
   "totalDuration": 23.808,
   "scenes": [
-    {"id":"intro","start":0,"end":4.368,"duration":4.368,"audio":"audio/intro.mp3","text":"你有没有想过，当我们和 AI 对话的时候，AI 到底是怎么理解我们的话的呢。","cues":[{"id":"question","offset":1.08,"absoluteTime":1.08}]},
-    {"id":"token-1","start":4.768,"end":7.576,"duration":2.808,"audio":"audio/token-1.mp3","text":"答案是它根本不理解汉字，它只认识 token。","cues":[{"id":"reveal","offset":1.632,"absoluteTime":6.4}]},
-    {"id":"token-2","start":7.976,"end":16.808,"duration":8.832,"audio":"audio/token-2.mp3","text":"你可以把 token 理解成 AI 的最小信息单位。\n比如「人工智能」这四个字，在 AI 眼里可能是两个 token：人工，智能。","cues":[{"id":"split","offset":5.4,"absoluteTime":13.376}]},
-    {"id":"ending","start":17.208,"end":23.664,"duration":6.456,"audio":"audio/ending.mp3","text":"所以下次看到「百万 token 上下文」这种说法，你就知道，它说的是 AI 一次能记住多少个这样的小块。","cues":[{"id":"context","offset":2.376,"absoluteTime":19.584}]}
+    {"id":"intro","start":0,"end":4.368,"duration":4.368,"audio":"audio/intro.mp3","text":"你有沒有想過，當我們和 AI 對話的時候，AI 到底是怎麼理解我們的話的呢。","cues":[{"id":"question","offset":1.08,"absoluteTime":1.08}]},
+    {"id":"token-1","start":4.768,"end":7.576,"duration":2.808,"audio":"audio/token-1.mp3","text":"答案是它根本不理解漢字，它只認識 token。","cues":[{"id":"reveal","offset":1.632,"absoluteTime":6.4}]},
+    {"id":"token-2","start":7.976,"end":16.808,"duration":8.832,"audio":"audio/token-2.mp3","text":"你可以把 token 理解成 AI 的最小資訊單位。\n例如「人工智慧」這四個字，在 AI 眼裡可能是兩個 token：人工，智慧。","cues":[{"id":"split","offset":5.4,"absoluteTime":13.376}]},
+    {"id":"ending","start":17.208,"end":23.664,"duration":6.456,"audio":"audio/ending.mp3","text":"所以下次看到「百萬 token 上下文」這種說法，你就知道，它說的是 AI 一次能記住多少個這樣的小區塊。","cues":[{"id":"context","offset":2.376,"absoluteTime":19.584}]}
   ],
   "voiceover": "voiceover.mp3"
 };
@@ -126,23 +126,23 @@ const NarrationStageLib = (() => {
 })();
 const { NarrationStage, Scene, Cue } = NarrationStageLib;
 
-// ── 视觉内容 ─────────────────────────────────────────────
+// ── 視覺內容 ─────────────────────────────────────────────
 const App = () => (
   <NarrationStage timeline={TIMELINE} audioSrc="_narration_token/voiceover.mp3" width={1920} height={1080} background="#0a0a0a">
-    {/* Scene 1: 大问号引入 */}
+    {/* Scene 1: 大問號開場 */}
     <Scene id="intro">
       <div className="scene-padding" style={{ alignItems: 'center', justifyContent: 'center' }}>
         <Cue id="question">{(triggered, p) => (
           <div style={{ fontSize: 320, color: triggered ? '#ffd54a' : '#3a3a3a', fontWeight: 200, transition: 'color 0.4s', transform: `scale(${0.8 + p * 0.2})`, lineHeight: 1 }}>?</div>
         )}</Cue>
-        <div style={{ fontSize: 56, color: '#aaa', marginTop: 60, letterSpacing: '0.05em', fontWeight: 300 }}>AI 是怎么理解我们的话的</div>
+        <div style={{ fontSize: 56, color: '#aaa', marginTop: 60, letterSpacing: '0.05em', fontWeight: 300 }}>AI 是怎麼理解我們的話的</div>
       </div>
     </Scene>
 
-    {/* Scene 2: reveal 关键词 */}
+    {/* Scene 2: reveal 關鍵字 */}
     <Scene id="token-1">
       <div className="scene-padding" style={{ alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ fontSize: 64, color: '#888', marginBottom: 80, fontWeight: 300 }}>它不认识汉字</div>
+        <div style={{ fontSize: 64, color: '#888', marginBottom: 80, fontWeight: 300 }}>它不認識漢字</div>
         <Cue id="reveal">{(triggered, p) => (
           <div style={{
             fontSize: 280, fontWeight: 700, color: '#ffd54a', letterSpacing: '0.05em',
@@ -155,25 +155,25 @@ const App = () => (
       </div>
     </Scene>
 
-    {/* Scene 3: 拆字演示 */}
+    {/* Scene 3: 拆字示範 */}
     <Scene id="token-2">
       <div className="scene-padding" style={{ alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ fontSize: 48, color: '#aaa', marginBottom: 100, fontWeight: 300 }}>token = AI 的最小信息单位</div>
+        <div style={{ fontSize: 48, color: '#aaa', marginBottom: 100, fontWeight: 300 }}>token = AI 的最小資訊單位</div>
         <Cue id="split">{(triggered, p) => (
           <div style={{ display: 'flex', gap: triggered ? 80 : 8, transition: 'gap 0.6s cubic-bezier(0.16, 1, 0.3, 1)' }}>
             <div style={{ fontSize: 200, fontWeight: 600, color: triggered ? '#ffd54a' : '#fff', padding: triggered ? '40px 60px' : '40px 20px', border: triggered ? '4px solid #ffd54a' : '4px solid transparent', borderRadius: 24, transition: 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1)', background: triggered ? 'rgba(255, 213, 74, 0.05)' : 'transparent' }}>
               人工
             </div>
             <div style={{ fontSize: 200, fontWeight: 600, color: triggered ? '#ffd54a' : '#fff', padding: triggered ? '40px 60px' : '40px 20px', border: triggered ? '4px solid #ffd54a' : '4px solid transparent', borderRadius: 24, transition: 'all 0.6s cubic-bezier(0.16, 1, 0.3, 1)', background: triggered ? 'rgba(255, 213, 74, 0.05)' : 'transparent' }}>
-              智能
+              智慧
             </div>
           </div>
         )}</Cue>
-        <div style={{ fontSize: 36, color: '#666', marginTop: 60, opacity: 0.6 }}>「人工智能」= 2 个 token</div>
+        <div style={{ fontSize: 36, color: '#666', marginTop: 60, opacity: 0.6 }}>「人工智慧」= 2 個 token</div>
       </div>
     </Scene>
 
-    {/* Scene 4: 总结 */}
+    {/* Scene 4: 總結 */}
     <Scene id="ending">
       <div className="scene-padding" style={{ alignItems: 'center', justifyContent: 'center' }}>
         <Cue id="context">{(triggered, p) => (
@@ -182,14 +182,14 @@ const App = () => (
               <span style={{ color: '#ffd54a' }}>1,000,000</span> token
             </div>
             <div style={{ fontSize: 48, color: '#888', fontWeight: 300, opacity: p }}>
-              ≈ AI 一次能记住的<span style={{ color: '#fff', fontWeight: 500 }}>「小块」数量</span>
+              ≈ AI 一次能記住的<span style={{ color: '#fff', fontWeight: 500 }}>「小區塊」數量</span>
             </div>
           </>
         )}</Cue>
       </div>
     </Scene>
 
-    {/* 全局水印 */}
+    {/* 全域浮水印 */}
     <div style={{ position: 'absolute', bottom: 24, right: 32, fontSize: 11, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.15em', fontFamily: 'monospace', pointerEvents: 'none', zIndex: 100 }}>
       Created by Huashu-Design
     </div>
@@ -201,7 +201,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(<App />);
 
 <script>
   // ── Fit 1920 stage to viewport ─────────────────────────────────
-  // 只在窗口窄于 1920 时缩小，≥1920（含录制用的 1920×1080）保持 1:1 原尺寸
+  // 只在視窗窄於 1920 時縮小，≥1920（含錄製用的 1920×1080）保持 1:1 原尺寸
   (function () {
     var root = document.getElementById('root');
     function rescale() {

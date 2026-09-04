@@ -65,7 +65,7 @@
     font-weight="700"
     fill="#EEEEEE"
     letter-spacing="1"
-  >用 HTML 做设计的 skill</text>
+  >用 HTML 做設計的 skill</text>
 
   <!-- Tagline -->
   <text
@@ -78,11 +78,11 @@
     letter-spacing="0.5"
   >高保真原型</text>
   <text x="176" y="284" font-family="'Inter', sans-serif" font-size="15" font-weight="700" fill="#D4532B">·</text>
-  <text x="188" y="284" font-family="'Inter', sans-serif" font-size="15" font-weight="500" fill="#BBBBBB" letter-spacing="0.5">幻灯片</text>
+  <text x="188" y="284" font-family="'Inter', sans-serif" font-size="15" font-weight="500" fill="#BBBBBB" letter-spacing="0.5">投影片</text>
   <text x="260" y="284" font-family="'Inter', sans-serif" font-size="15" font-weight="700" fill="#D4532B">·</text>
-  <text x="272" y="284" font-family="'Inter', sans-serif" font-size="15" font-weight="500" fill="#BBBBBB" letter-spacing="0.5">动画</text>
+  <text x="272" y="284" font-family="'Inter', sans-serif" font-size="15" font-weight="500" fill="#BBBBBB" letter-spacing="0.5">動畫</text>
   <text x="320" y="284" font-family="'Inter', sans-serif" font-size="15" font-weight="700" fill="#D4532B">·</text>
-  <text x="332" y="284" font-family="'Inter', sans-serif" font-size="15" font-weight="500" fill="#BBBBBB" letter-spacing="0.5">信息图</text>
+  <text x="332" y="284" font-family="'Inter', sans-serif" font-size="15" font-weight="500" fill="#BBBBBB" letter-spacing="0.5">資訊圖</text>
   <text x="404" y="284" font-family="'Inter', sans-serif" font-size="15" font-weight="700" fill="#D4532B">·</text>
   <text x="416" y="284" font-family="'Inter', sans-serif" font-size="15" font-weight="500" fill="#BBBBBB" letter-spacing="0.5">App 原型</text>
 
@@ -95,7 +95,7 @@
     font-weight="400"
     fill="#888888"
     letter-spacing="0.3"
-  >20 种设计哲学  ·  5 维专家评审  ·  发布会级动画导出</text>
+  >20 種設計哲學  ·  5 維專家評審  ·  發表會級動畫匯出</text>
 
   <!-- Footer credit -->
   <text

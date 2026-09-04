@@ -1,8 +1,8 @@
 <!doctype html>
-<html lang="zh-Hans">
+<html lang="zh-Hant-TW">
 <head>
 <meta charset="utf-8" />
-<title>w2 · 粗糙的第一版，好过完美的大招</title>
+<title>w2 · 粗糙的第一版，勝過完美的絕招</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,300..700;1,8..60,300..700&family=Noto+Serif+SC:wght@200;300;400;500;600&family=Inter:wght@100;200;300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -17,9 +17,9 @@
     --hairline: rgba(255,255,255,0.12);
     --accent: #D97757;
     --accent-deep: #B85D3D;
-    --bad: #6E3A2E;           /* 失败暗红调，不刺眼 */
-    --bad-strong: #C85A42;    /* 失败叉号强调，对比度提升 */
-    --cool: rgba(255,255,255,0.42); /* 冷色参考线（左路径） */
+    --bad: #6E3A2E;           /* 失敗暗紅調，不刺眼 */
+    --bad-strong: #C85A42;    /* 失敗叉號強調，對比度提升 */
+    --cool: rgba(255,255,255,0.42); /* 冷色參考線（左路徑） */
     --cd-bg: #F5F4F0;
     --cd-panel: #FFFFFF;
     --cd-ink: #1A1918;
@@ -130,7 +130,7 @@
   }
 
   /* ======================================================
-   * TOP HALF · 闷头一把梭（3 hours, all at once）
+   * TOP HALF · 埋頭一口氣做完（3 hours, all at once）
    * ====================================================== */
   .half-top {
     position: absolute;
@@ -286,7 +286,7 @@
   }
 
   /* ======================================================
-   * BOTTOM HALF · 尽早 show（small iterations）
+   * BOTTOM HALF · 儘早 show（small iterations）
    * ====================================================== */
   .half-bot {
     position: absolute;
@@ -512,7 +512,7 @@
   }
 
   /* ======================================================
-   * BRAND REVEAL — 统一动作
+   * BRAND REVEAL — 統一動作
    * ====================================================== */
   .brand-sheet {
     position: absolute;
@@ -556,7 +556,7 @@
     <div class="mark">HUASHU · DESIGN</div>
     <div class="mark-right">V2 · 2026</div>
 
-    <div class="title-line" id="titleLine">w2 · 粗糙的第一版，好过完美的大招</div>
+    <div class="title-line" id="titleLine">w2 · 粗糙的第一版，勝過完美的絕招</div>
 
     <!-- Splitter -->
     <div class="splitter" id="splitter"></div>
@@ -566,7 +566,7 @@
     <div class="half-top" id="halfTop">
       <div class="half-label">
         <span class="tag">A</span>
-        <span class="zh">闷头一把梭</span>
+        <span class="zh">埋頭一口氣做完</span>
         <span style="font-family: var(--mono); color: var(--muted); letter-spacing: 0.18em; font-size: 11px; margin-left: auto;">ALL&nbsp;AT&nbsp;ONCE</span>
       </div>
       <div class="terminal-big">
@@ -598,7 +598,7 @@
     <div class="half-bot" id="halfBot">
       <div class="half-label">
         <span class="tag">B</span>
-        <span class="zh">尽早 show</span>
+        <span class="zh">儘早 show</span>
         <span style="font-family: var(--mono); color: var(--muted); letter-spacing: 0.18em; font-size: 11px; margin-left: auto;">SHOW&nbsp;EARLY</span>
       </div>
       <div class="iter-row">
@@ -684,7 +684,7 @@
         </g>
 
         <!-- Anchor for A (right side, top near the spike) -->
-        <text class="anchor-label" x="1200" y="150" fill="#C85A42" text-anchor="end">闷头一把梭</text>
+        <text class="anchor-label" x="1200" y="150" fill="#C85A42" text-anchor="end">埋頭一口氣做完</text>
         <text class="anchor-en" x="1200" y="170" fill="#C85A42" text-anchor="end">REJECTED</text>
 
         <!-- Curve B (Show early): steady step rise across first 35 min -->
@@ -697,7 +697,7 @@
         <circle class="curve-dot" cx="680" cy="140" r="8"/>
 
         <!-- Anchor for B (above the peak dot on left-ish side) -->
-        <text class="anchor-label" x="680" y="115" fill="#D97757" text-anchor="middle">尽早 show</text>
+        <text class="anchor-label" x="680" y="115" fill="#D97757" text-anchor="middle">儘早 show</text>
         <text class="anchor-en" x="680" y="96" fill="#D97757" text-anchor="middle">SHIPPED</text>
 
         <!-- Legend hint: tiny label on A's plateau -->
@@ -751,12 +751,12 @@
   // 0.6-1.4    two half-labels fade in (top first, then bot)
   // 1.4-2.0    top terminal line 1 types; bot panel 1 enters
   //
-  // Top track (闷头):
+  // Top track (埋頭):
   //   2.0-7.8  progress bar crawls from 0 to 99% (slow, painful)
   //   7.8-8.4  stuck at 99%
   //   8.4-8.9  fail stamp lands + bar turns red + bar drops to 0
   //
-  // Bottom track (尽早):
+  // Bottom track (儘早):
   //   2.0-2.6  iter1 enters, nod1 appears @ 2.8
   //   3.6-4.2  iter2 enters, nod2 appears @ 4.4
   //   5.6-6.2  iter3 enters, nod3 appears @ 6.4 (final tick — biggest)

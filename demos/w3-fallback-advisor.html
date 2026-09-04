@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-Hans">
+<html lang="zh-Hant-TW">
 <head>
 <meta charset="utf-8" />
 <title>w3 · Fallback Advisor（中文版）</title>
@@ -272,7 +272,7 @@
     display: block;
   }
 
-  /* ============ Brand Reveal (米色盖层) ============ */
+  /* ============ Brand Reveal (米色覆蓋層) ============ */
   .brand-panel {
     position: absolute;
     inset: 0;
@@ -323,59 +323,59 @@
 
 <div class="stage" id="stage">
 
-  <!-- 水印 -->
+  <!-- 浮水印 -->
   <div class="watermark-tl">HUASHU · DESIGN</div>
   <div class="watermark-br">V2 · 2026 · w3</div>
 
-  <!-- 顶部标题 -->
+  <!-- 頂部標題 -->
   <div class="top-title" id="topTitle">
-    不知道要什么？<span class="accent">先给你 3 个方向</span>
+    不知道要什麼？<span class="accent">先給你 3 個方向</span>
   </div>
   <div class="sub-caption" id="subCaption">20 Philosophies · 3 Directions</div>
 
-  <!-- 扫描光 -->
+  <!-- 掃描光 -->
   <div class="scan-light" id="scanLight"></div>
 
-  <!-- 4×5 哲学墙 -->
+  <!-- 4×5 哲學牆 -->
   <div class="wall-viewport" id="wallViewport">
     <div class="wall-grid" id="wallGrid">
       <!-- 20 cells injected by JS -->
     </div>
   </div>
 
-  <!-- 前景 3 张方向卡 -->
+  <!-- 前景 3 張方向卡 -->
   <div class="fg-row" id="fgRow">
-    <!-- card 1: Kenya Hara · 东方极简 -->
+    <!-- card 1: Kenya Hara · 東方極簡 -->
     <div class="fg-card" id="card1">
       <div class="card-body">
-        <div class="label">方向 01 · 东方空间</div>
+        <div class="label">方向 01 · 東方空間</div>
         <div class="title-cn">原研哉式留白</div>
         <div class="title-en">Kenya Hara</div>
-        <div class="feature">赤土橙 · 大量留白 · 宣纸质感</div>
+        <div class="feature">赤土橙 · 大量留白 · 宣紙質感</div>
       </div>
       <div class="thumb-wrap" id="thumb1">
         <img src="../assets/showcases/website-saas/saas-takram.png" alt="demo takram" />
       </div>
     </div>
-    <!-- card 2: Pentagram · 信息建筑 -->
+    <!-- card 2: Pentagram · 資訊建築 -->
     <div class="fg-card" id="card2">
       <div class="card-body">
-        <div class="label">方向 02 · 信息建筑</div>
+        <div class="label">方向 02 · 資訊建築</div>
         <div class="title-cn">Pentagram 秩序</div>
         <div class="title-en">Pentagram</div>
-        <div class="feature">强网格 · 高对比 · 理性版式</div>
+        <div class="feature">強網格 · 高對比 · 理性版式</div>
       </div>
       <div class="thumb-wrap" id="thumb2">
         <img src="../assets/showcases/website-saas/saas-pentagram.png" alt="demo pentagram" />
       </div>
     </div>
-    <!-- card 3: David Carson · 实验先锋 -->
+    <!-- card 3: David Carson · 實驗先鋒 -->
     <div class="fg-card" id="card3">
       <div class="card-body">
-        <div class="label">方向 03 · 实验先锋</div>
+        <div class="label">方向 03 · 實驗先鋒</div>
         <div class="title-cn">David Carson 式</div>
         <div class="title-en">Experimental Edge</div>
-        <div class="feature">破格排印 · 粗野几何 · 视觉冲击</div>
+        <div class="feature">破格排印 · 粗野幾何 · 視覺衝擊</div>
       </div>
       <div class="thumb-wrap" id="thumb3">
         <img src="../assets/showcases/website-saas/saas-build.png" alt="demo build" />
@@ -408,25 +408,25 @@
   // ============ 20 Philosophies ============
   // 4 rows × 5 cols = 20. Selected: idx 0 (Pentagram), idx 9 (Kenya Hara), idx 12 (David Carson)
   const PHILOSOPHIES = [
-    // row 1 — 信息建筑派
+    // row 1 — 資訊建築派
     { name: 'Pentagram',    glyph: 'grid' },
     { name: 'M. Vignelli',  glyph: 'bars' },
     { name: 'Apple HIG',    glyph: 'radius' },
     { name: 'Spin',         glyph: 'slash' },
     { name: 'Build',        glyph: 'type' },
-    // row 2 — 运动诗学派
+    // row 2 — 運動詩學派
     { name: 'Field.io',     glyph: 'wave' },
     { name: 'Active Theory',glyph: 'orbit' },
     { name: 'Hi-Res!',      glyph: 'dots' },
     { name: 'Locomotive',   glyph: 'arrow' },
     { name: 'Takram',       glyph: 'circle' },
-    // row 3 — 极简/东方
+    // row 3 — 極簡/東方
     { name: 'Kenya Hara',   glyph: 'ma' },
     { name: 'D. Rams',      glyph: 'square' },
     { name: 'J. Ive',       glyph: 'arc' },
     { name: 'J. Morrison',  glyph: 'minimal' },
     { name: 'S. Ogata',     glyph: 'line' },
-    // row 4 — 实验 & 海报
+    // row 4 — 實驗 & 海報
     { name: 'D. Carson',    glyph: 'collage' },
     { name: 'S. Sagmeister',glyph: 'stamp' },
     { name: 'P. Scher',     glyph: 'poster' },

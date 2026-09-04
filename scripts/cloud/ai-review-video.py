@@ -6,29 +6,29 @@
 # ]
 # ///
 """
-AI看片评审闭环 —— 渲染出的动画MP4喂给视频理解模型（seed-2.0-lite），
-按固定checklist逐段送审 + 全片低清扫一遍，汇总成结构化markdown评审报告。
+AI影片評審閉環 —— 渲染出的動畫MP4餵給影片理解模型（seed-2.0-lite），
+按固定checklist逐段送審 + 全片低畫質掃一遍，彙整成結構化markdown評審報告。
 
-⚠️ 可选云能力：会把压缩后的成片片段发送到火山方舟官方接口（ark.cn-beijing.volces.com）
-做视频理解评审，使用你自己的 ARK_API_KEY。首次调用需 --yes 或 HUASHU_CLOUD_OK=1
-显式确认。数据流向声明见仓库根 SECURITY.md。本地免费替代：scripts/verify-video.sh 截帧人工看。
+⚠️ 可選雲能力：會把壓縮後的成片片段傳送到火山方舟官方介面（ark.cn-beijing.volces.com）
+做影片理解評審，使用你自己的 ARK_API_KEY。首次呼叫需 --yes 或 HUASHU_CLOUD_OK=1
+顯式確認。資料流向宣告見倉庫根 SECURITY.md。本機免費替代：scripts/verify-video.sh 截幀人工看。
 
 Usage:
     uv run ai-review-video.py --video 成片.mp4 --yes
-    uv run ai-review-video.py --video 成片.mp4 --context 导演稿.md --yes
-    uv run ai-review-video.py --video 成片.mp4 --segment-len 60 --output 报告.md --yes
+    uv run ai-review-video.py --video 成片.mp4 --context 導演稿.md --yes
+    uv run ai-review-video.py --video 成片.mp4 --segment-len 60 --output 報告.md --yes
 
-调用链路：
-    1. ffprobe 探测时长/音轨
-    2. 有音轨 → ffmpeg silencedetect 提取音效onset时间表（模型听不到视频音轨，
-       实测2026-07-17：input_video只送画面。音画对位检查=本地onset+模型画面核对）
-    3. 按 --segment-len 切段并压缩（1280宽/15fps/crf28，扁平动画约0.5MB/分钟）
-    4. 逐段送审（checklist①-⑧），每段prompt标注原片时间范围
-    5. 全片再压一版低清（960宽/10fps）单独送审，专查跨段叙事连贯/hero贯穿
-    6. 文本汇总call：按checklist逐项合并，产出最终报告；分段原始发现保留在附录
+呼叫鏈路：
+    1. ffprobe 探測時長/音軌
+    2. 有音軌 → ffmpeg silencedetect 提取音效onset時間表（模型聽不到影片音軌，
+       實測2026-07-17：input_video只送畫面。音畫對位檢查=本機onset+模型畫面核對）
+    3. 按 --segment-len 切段並壓縮（1280寬/15fps/crf28，扁平動畫約0.5MB/分鐘）
+    4. 逐段送審（checklist①-⑧），每段prompt標註原片時間範圍
+    5. 全片再壓一版低畫質（960寬/10fps）單獨送審，專查跨段敘事連貫/hero貫穿
+    6. 文字彙整call：按checklist逐項合併，產出最終報告；分段原始發現保留在附錄
 
-API key：优先读环境变量 ARK_API_KEY，其次读 skill 根目录 .env（只提取这一个变量），绝不硬编码。
-代理：requests session 关闭 trust_env（不继承本机代理配置），免疫 ALL_PROXY 之类残留代理导致的 TLS 报错。
+API key：優先讀環境變數 ARK_API_KEY，其次讀 skill 根目錄 .env（只提取這一個變數），絕不硬編碼。
+代理：requests session 關閉 trust_env（不繼承本機代理設定），免疫 ALL_PROXY 之類殘留代理導致的 TLS 報錯。
 """
 
 import argparse
@@ -46,29 +46,29 @@ import requests
 
 API_URL = "https://ark.cn-beijing.volces.com/api/v3/responses"
 DEFAULT_MODEL = "doubao-seed-2-0-lite-260215"
-ENV_PATH = Path(__file__).resolve().parents[2] / ".env"  # skill 根目录 .env（已 gitignore）
-MAX_SEGMENT_MB = 8  # 单段压缩产物超过这个值就再压一档
+ENV_PATH = Path(__file__).resolve().parents[2] / ".env"  # skill 根目錄 .env（已 gitignore）
+MAX_SEGMENT_MB = 8  # 單段壓縮產物超過這個值就再壓一檔
 
 CHECKLIST = """\
-① 黑帧/空窗/渲染残缺：整帧或大面积黑屏、白屏、元素未渲染出来、明显破图
-② 文字问题：字卡/标签被裁切、溢出容器、错字、乱码、字叠字
-③ 元素重叠遮挡：不该重叠的元素互相遮挡、层级错误、穿模
-④ 叙事连贯性：场景过渡分三类——硬切（前后帧整页突变，无任何衔接）、
-   交叉淡入淡出（旧场景透明度渐隐）、morph（元素连续变形/位移到新场景）。
-   报告时必须写明你看到的是哪一类，不要把淡入淡出误报成硬切；
-   硬切=⚡，淡入淡出在导演稿要求morph时=💡「过渡偷懒」
-⑤ hero/主体贯穿性：如果有贯穿全片的主体元素，它是否在场景切换中断裂、消失、突变位置
-⑥ 节奏死段：见下方「静止段客观检测表」（ffmpeg逐帧检测，≥3秒完全静止的区间）。
-   你的任务不是找死段，而是对表中每个区间判断：是刻意hold（字卡阅读/弹幕停留/收尾定格）
-   还是真死段（画面无信息可读还停着）。刻意hold=不报或💡，真死段=⚡
-⑦ 音效打点（见下方onset时间表）：核对每个音效时间点画面是否有对应事件
-⑧ 构图：明显失衡、大片无意义空白、重要元素贴边或被挤到角落"""
+① 黑幀/空窗/渲染殘缺：整幀或大面積黑屏、白屏、元素未渲染出來、明顯破圖
+② 文字問題：字卡/標籤被裁切、溢位容器、錯字、亂碼、字疊字
+③ 元素重疊遮擋：不該重疊的元素互相遮擋、層級錯誤、穿模
+④ 敘事連貫性：場景過渡分三類——硬切（前後幀整頁突變，無任何銜接）、
+   交叉淡入淡出（舊場景透明度漸隱）、morph（元素連續變形/位移到新場景）。
+   報告時必須寫明你看到的是哪一類，不要把淡入淡出誤報成硬切；
+   硬切=⚡，淡入淡出在導演稿要求morph時=💡「過渡偷懶」
+⑤ hero/主體貫穿性：如果有貫穿全片的主體元素，它是否在場景切換中斷裂、消失、突變位置
+⑥ 節奏死段：見下方「靜止段客觀檢測表」（ffmpeg逐幀檢測，≥3秒完全靜止的區間）。
+   你的任務不是找死段，而是對表中每個區間判斷：是刻意hold（字卡閱讀/彈幕停留/收尾定格）
+   還是真死段（畫面無資訊可讀還停著）。刻意hold=不報或💡，真死段=⚡
+⑦ 音效打點（見下方onset時間表）：核對每個音效時間點畫面是否有對應事件
+⑧ 構圖：明顯失衡、大片無意義空白、重要元素貼邊或被擠到角落"""
 
 SEVERITY_RULE = """\
-严重度分三级：
-- ⚠️致命：交付前必须修（黑帧、错字、文字被裁、元素叠死、明显破图）
-- ⚡重要：观感明显受损（硬切感、hero断裂、超3秒死段、构图明显失衡）
-- 💡建议：锦上添花的改进点"""
+嚴重度分三級：
+- ⚠️致命：交付前必須修（黑幀、錯字、文字被裁、元素疊死、明顯破圖）
+- ⚡重要：觀感明顯受損（硬切感、hero斷裂、超3秒死段、構圖明顯失衡）
+- 💡建議：錦上添花的改進點"""
 
 
 def log(msg):
@@ -78,21 +78,21 @@ def log(msg):
 def load_api_key():
     key = os.getenv("ARK_API_KEY")
     if not key and ENV_PATH.exists():
-        # 只提取 ARK_API_KEY 一个变量，不把 .env 整文件灌进环境
+        # 只提取 ARK_API_KEY 一個變數，不把 .env 整檔案灌進環境
         for line in ENV_PATH.read_text(encoding="utf-8").splitlines():
             line = line.strip()
             if line.startswith("ARK_API_KEY") and "=" in line:
                 key = line.split("=", 1)[1].strip().strip("'\"")
                 break
     if not key or key.startswith("your_"):
-        sys.exit("Error: ARK_API_KEY 未配置（skill 根目录 .env 或环境变量），拒绝继续。不编造评审结果。")
+        sys.exit("Error: ARK_API_KEY 未設定（skill 根目錄 .env 或環境變數），拒絕繼續。不編造評審結果。")
     return key
 
 
 def run(cmd):
     r = subprocess.run(cmd, capture_output=True, text=True)
     if r.returncode != 0:
-        raise RuntimeError(f"命令失败: {' '.join(cmd)}\n{r.stderr[-2000:]}")
+        raise RuntimeError(f"命令失敗: {' '.join(cmd)}\n{r.stderr[-2000:]}")
     return r
 
 
@@ -106,14 +106,14 @@ def probe(video: Path):
 
 
 def detect_audio_onsets(video: Path, noise_db=-45, min_silence=0.3):
-    """silencedetect反推音效onset。返回原片秒数列表。"""
+    """silencedetect反推音效onset。回傳原片秒數清單。"""
     r = subprocess.run(
         ["ffmpeg", "-i", str(video), "-af",
          f"silencedetect=noise={noise_db}dB:d={min_silence}", "-f", "null", "-"],
         capture_output=True, text=True)
     onsets = [round(float(m), 1) for m in
               re.findall(r"silence_end:\s*([\d.]+)", r.stderr)]
-    # 片头非静音（开场即有声）时补0
+    # 片頭非靜音（開場即有聲）時補0
     starts = re.findall(r"silence_start:\s*([\d.-]+)", r.stderr)
     if starts and float(starts[0]) > min_silence:
         onsets.insert(0, 0.0)
@@ -121,7 +121,7 @@ def detect_audio_onsets(video: Path, noise_db=-45, min_silence=0.3):
 
 
 def detect_static_segments(video: Path, noise=0.001, min_dur=3.0):
-    """freezedetect找≥min_dur秒完全静止的区间。返回[(start,end)]原片秒。"""
+    """freezedetect找≥min_dur秒完全靜止的區間。回傳[(start,end)]原片秒。"""
     r = subprocess.run(
         ["ffmpeg", "-i", str(video), "-vf",
          f"freezedetect=n={noise}:d={min_dur}", "-f", "null", "-"],
@@ -183,102 +183,102 @@ def ask_model(session, api_key, model, prompt, video_path: Path | None = None, r
                     text = choices[0].get("message", {}).get("content", "")
             if text:
                 return text, usage
-            last_err = f"响应无文本: {json.dumps(data, ensure_ascii=False)[:500]}"
+            last_err = f"響應無文字: {json.dumps(data, ensure_ascii=False)[:500]}"
         except requests.RequestException as e:
-            last_err = f"网络错误: {e}"
+            last_err = f"網路錯誤: {e}"
         if attempt < retries:
-            log(f"  重试（{last_err[:120]}）...")
+            log(f"  重試（{last_err[:120]}）...")
             time.sleep(3)
     raise RuntimeError(last_err)
 
 
 def segment_prompt(seg_start, seg_end, duration, context_text, onsets_in_seg,
                    statics_in_seg):
-    p = [f"你是动画成片质检员，任务是严格挑毛病，不夸片子。",
-         f"这段视频是一部总长{fmt_ts(duration)}的动画成片的一个片段，"
-         f"对应原片 {fmt_ts(seg_start)}–{fmt_ts(seg_end)}。"
-         f"片段内第t秒 = 原片第{fmt_ts(seg_start)}+t秒，报告里一律用原片时间（分:秒）。"]
+    p = [f"你是動畫成片質檢員，任務是嚴格挑毛病，不誇片子。",
+         f"這段影片是一部總長{fmt_ts(duration)}的動畫成片的一個片段，"
+         f"對應原片 {fmt_ts(seg_start)}–{fmt_ts(seg_end)}。"
+         f"片段內第t秒 = 原片第{fmt_ts(seg_start)}+t秒，報告裡一律用原片時間（分:秒）。"]
     if context_text:
-        p.append("以下是全片导演稿（评审上下文，用来判断叙事意图和该出现什么）：\n"
-                 "<导演稿>\n" + context_text + "\n</导演稿>")
-    p.append("逐项检查以下checklist，只报本片段内的发现：\n" + CHECKLIST)
+        p.append("以下是全片導演稿（評審上下文，用來判斷敘事意圖和該出現什麼）：\n"
+                 "<導演稿>\n" + context_text + "\n</導演稿>")
+    p.append("逐項檢查以下checklist，只報本片段內的發現：\n" + CHECKLIST)
     if statics_in_seg:
         ts = "、".join(f"{fmt_ts(a)}–{fmt_ts(b)}（{b - a:.1f}s）" for a, b in statics_in_seg)
-        p.append(f"⑥的静止段客观检测表（本段内，原片时间）：{ts}。逐个判断刻意hold还是真死段。")
+        p.append(f"⑥的靜止段客觀檢測表（本段內，原片時間）：{ts}。逐個判斷刻意hold還是真死段。")
     else:
-        p.append("本片段内无≥3秒静止段，⑥直接写「未发现」。")
+        p.append("本片段內無≥3秒靜止段，⑥直接寫「未發現」。")
     if onsets_in_seg:
         ts = "、".join(f"{fmt_ts(t)}({t}s)" for t in onsets_in_seg)
-        p.append(f"⑦的onset时间表（本段内音效实际出现的原片时间）：{ts}。"
-                 f"你听不到声音，只需核对这些时间点画面上是否有值得配音效的事件"
-                 f"（转场/字卡落定/撞击/元素出现），没有对应事件的时间点=音效打空，要报。")
+        p.append(f"⑦的onset時間表（本段內音效實際出現的原片時間）：{ts}。"
+                 f"你聽不到聲音，只需核對這些時間點畫面上是否有值得配音效的事件"
+                 f"（轉場/字卡落定/撞擊/元素出現），沒有對應事件的時間點=音效打空，要報。")
     else:
-        p.append("本片段内没有检测到音效onset，⑦跳过；但如果本段有强烈画面事件"
-                 "（撞击/字卡/转场）却无音效覆盖，可在⑦下用💡提出。")
+        p.append("本片段內沒有檢測到音效onset，⑦跳過；但如果本段有強烈畫面事件"
+                 "（撞擊/字卡/轉場）卻無音效覆蓋，可在⑦下用💡提出。")
     p.append(SEVERITY_RULE)
-    p.append("输出格式：markdown。按①-⑧逐项，每项下用列表：\n"
-             "- [原片分:秒] 严重度emoji 具体描述\n"
-             "该项无问题就写「未发现」。只报你真正看到的，不确定的标「存疑」，不编造。")
+    p.append("輸出格式：markdown。按①-⑧逐項，每項下用列表：\n"
+             "- [原片分:秒] 嚴重度emoji 具體描述\n"
+             "該項無問題就寫「未發現」。只報你真正看到的，不確定的標「存疑」，不編造。")
     return "\n\n".join(p)
 
 
 def global_prompt(duration, context_text):
-    p = ["你是动画成片质检员。这是一部动画成片的全片低清版（评审用压缩，画质低是正常的，"
-         "不要报画质/清晰度问题），总长" + fmt_ts(duration) + "。"]
+    p = ["你是動畫成片質檢員。這是一部動畫成片的全片低畫質版（評審用壓縮，畫質低是正常的，"
+         "不要報畫質/清晰度問題），總長" + fmt_ts(duration) + "。"]
     if context_text:
-        p.append("导演稿：\n<导演稿>\n" + context_text + "\n</导演稿>")
-    p.append("只做三件事（细节问题已有分段评审负责，你不用管）：\n"
-             "A. 叙事连贯性：从头到尾看，哪些时间点是PowerPoint式硬切（整页突变无过渡）？\n"
-             "B. hero/主体贯穿性：贯穿全片的主体元素在哪些切换处断裂、消失或突变？\n"
-             "C. 整体节奏：哪些区间拖（长时间无新信息）、哪些区间赶？\n\n"
+        p.append("導演稿：\n<導演稿>\n" + context_text + "\n</導演稿>")
+    p.append("只做三件事（細節問題已有分段評審負責，你不用管）：\n"
+             "A. 敘事連貫性：從頭到尾看，哪些時間點是PowerPoint式硬切（整頁突變無過渡）？\n"
+             "B. hero/主體貫穿性：貫穿全片的主體元素在哪些切換處斷裂、消失或突變？\n"
+             "C. 整體節奏：哪些區間拖（長時間無新資訊）、哪些區間趕？\n\n"
              + SEVERITY_RULE +
-             "\n\n输出markdown，A/B/C三节，发现带[分:秒]时间点。无问题写「未发现」。不编造。")
+             "\n\n輸出markdown，A/B/C三節，發現帶[分:秒]時間點。無問題寫「未發現」。不編造。")
     return "\n\n".join(p)
 
 
 def synthesis_prompt(duration, seg_reports, global_report):
-    parts = ["你是评审报告主编。下面是同一部" + fmt_ts(duration) +
-             "动画成片的分段评审 + 全片评审原始记录，把它们合并成一份最终报告正文。",
+    parts = ["你是評審報告主編。下面是同一部" + fmt_ts(duration) +
+             "動畫成片的分段評審 + 全片評審原始記錄，把它們合併成一份最終報告正文。",
              "要求：\n"
-             "1. 按checklist①-⑧逐项组织，每项下按时间顺序列发现：- [分:秒] 严重度 描述\n"
-             "2. 同一问题被多段重复报的合并成一条；分段与全片评审矛盾时两说并存标「存疑」\n"
-             "3. 保留每条发现的时间点和严重度emoji（⚠️/⚡/💡），不新增原始记录里没有的发现\n"
-             "4. 开头给一个「问题总数：⚠️x ⚡y 💡z」的统计行和三句话以内的总评\n"
-             "5. 只输出报告正文markdown，不要客套话",
-             "<全片评审>\n" + global_report + "\n</全片评审>"]
+             "1. 按checklist①-⑧逐項組織，每項下按時間順序列發現：- [分:秒] 嚴重度 描述\n"
+             "2. 同一問題被多段重複報的合併成一條；分段與全片評審矛盾時兩說並存標「存疑」\n"
+             "3. 保留每條發現的時間點和嚴重度emoji（⚠️/⚡/💡），不新增原始記錄裡沒有的發現\n"
+             "4. 開頭給一個「問題總數：⚠️x ⚡y 💡z」的統計行和三句話以內的總評\n"
+             "5. 只輸出報告正文markdown，不要客套話",
+             "<全片評審>\n" + global_report + "\n</全片評審>"]
     for (s, e, text) in seg_reports:
-        parts.append(f"<分段评审 原片{fmt_ts(s)}–{fmt_ts(e)}>\n{text}\n</分段评审>")
+        parts.append(f"<分段評審 原片{fmt_ts(s)}–{fmt_ts(e)}>\n{text}\n</分段評審>")
     return "\n\n".join(parts)
 
 
 def main():
-    ap = argparse.ArgumentParser(description="AI看片评审：动画MP4 → checklist结构化评审报告")
-    ap.add_argument("--video", required=True, help="成片路径（mp4）")
-    ap.add_argument("--context", help="导演稿/分幕说明md路径（可选，作为评审上下文）")
-    ap.add_argument("--segment-len", type=int, default=60, help="分段长度秒（默认60）")
-    ap.add_argument("--model", default=DEFAULT_MODEL, help=f"模型（默认{DEFAULT_MODEL}）")
-    ap.add_argument("--output", "-o", help="报告路径（默认视频同目录<视频名>-AI评审.md）")
+    ap = argparse.ArgumentParser(description="AI影片評審：動畫MP4 → checklist結構化評審報告")
+    ap.add_argument("--video", required=True, help="成片路徑（mp4）")
+    ap.add_argument("--context", help="導演稿/分幕說明md路徑（可選，作為評審上下文）")
+    ap.add_argument("--segment-len", type=int, default=60, help="分段長度秒（預設60）")
+    ap.add_argument("--model", default=DEFAULT_MODEL, help=f"模型（預設{DEFAULT_MODEL}）")
+    ap.add_argument("--output", "-o", help="報告路徑（預設影片同目錄<影片名>-AI評審.md）")
     ap.add_argument("--yes", action="store_true",
-                    help="确认将压缩后的视频段发送到火山方舟官方接口（或设 HUASHU_CLOUD_OK=1）")
+                    help="確認將壓縮後的影片段傳送到火山方舟官方介面（或設 HUASHU_CLOUD_OK=1）")
     args = ap.parse_args()
 
     video = Path(args.video).resolve()
     if not video.exists():
-        sys.exit(f"Error: 视频不存在 {video}")
+        sys.exit(f"Error: 影片不存在 {video}")
 
     if not args.yes and os.getenv("HUASHU_CLOUD_OK") != "1":
         sys.exit(
-            f"[云能力确认] 本次将把 {video.name} 压缩后分段发送到 ark.cn-beijing.volces.com"
-            "（火山方舟官方接口，使用你自己的 ARK_API_KEY 做视频理解评审）。\n"
-            "确认无误请重跑并加 --yes，或设置环境变量 HUASHU_CLOUD_OK=1。"
-            "数据流向声明见 SECURITY.md；本地免费替代：scripts/verify-video.sh。")
-    out_path = Path(args.output) if args.output else video.parent / f"{video.stem}-AI评审.md"
+            f"[雲能力確認] 本次將把 {video.name} 壓縮後分段傳送到 ark.cn-beijing.volces.com"
+            "（火山方舟官方介面，使用你自己的 ARK_API_KEY 做影片理解評審）。\n"
+            "確認無誤請重跑並加 --yes，或設定環境變數 HUASHU_CLOUD_OK=1。"
+            "資料流向宣告見 SECURITY.md；本機免費替代：scripts/verify-video.sh。")
+    out_path = Path(args.output) if args.output else video.parent / f"{video.stem}-AI評審.md"
 
     context_text = ""
     if args.context:
         ctx = Path(args.context)
         if not ctx.exists():
-            sys.exit(f"Error: 上下文文件不存在 {ctx}")
+            sys.exit(f"Error: 指定的檔案不存在 {ctx}")
         context_text = ctx.read_text(encoding="utf-8")[:12000]
 
     api_key = load_api_key()
@@ -286,13 +286,13 @@ def main():
     session.trust_env = False  # 免疫 ALL_PROXY 等代理坑
 
     duration, has_audio = probe(video)
-    log(f"视频 {fmt_ts(duration)}，音轨={'有' if has_audio else '无'}")
+    log(f"影片 {fmt_ts(duration)}，音軌={'有' if has_audio else '無'}")
 
     onsets = detect_audio_onsets(video) if has_audio else []
     if has_audio:
-        log(f"音效onset检测：{len(onsets)}个 → {['%.1f' % t for t in onsets]}")
+        log(f"音效onset檢測：{len(onsets)}個 → {['%.1f' % t for t in onsets]}")
 
-    # 静止段客观检测（相邻区间合并）
+    # 靜止段客觀檢測（相鄰區間合併）
     raw_statics = detect_static_segments(video)
     statics = []
     for a, b in raw_statics:
@@ -300,7 +300,7 @@ def main():
             statics[-1] = (statics[-1][0], b)
         else:
             statics.append((a, b))
-    log(f"静止段检测（≥3s）：{len(statics)}个 → "
+    log(f"靜止段檢測（≥3s）：{len(statics)}個 → "
         f"{[f'{a:.0f}-{b:.0f}s' for a, b in statics]}")
 
     total_usage = {"input_tokens": 0, "output_tokens": 0}
@@ -329,7 +329,7 @@ def main():
             onsets_in = [t for t in onsets if s <= t < e]
             statics_in = [(a, b) for a, b in statics if a < e and b > s]
             log(f"段{i} {fmt_ts(s)}–{fmt_ts(e)}（{mb:.1f}MB，onset×{len(onsets_in)}，"
-                f"静止段×{len(statics_in)}）送审...")
+                f"靜止段×{len(statics_in)}）送審...")
             try:
                 text, usage = ask_model(session, api_key, args.model,
                                         segment_prompt(s, e, duration, context_text,
@@ -338,11 +338,11 @@ def main():
                 add_usage(usage)
                 seg_reports.append((s, e, text))
             except RuntimeError as err:
-                log(f"  段{i}送审失败：{err}")
+                log(f"  段{i}送審失敗：{err}")
                 failures.append((s, e, str(err)))
 
-        # 全片低清pass
-        log("全片低清版送审（叙事/hero/节奏）...")
+        # 全片低畫質pass
+        log("全片低畫質版送審（敘事/hero/節奏）...")
         full = tmp / "full.mp4"
         compress(video, full, width=960, fps=10, crf=30)
         global_report, global_fail = "", None
@@ -352,53 +352,53 @@ def main():
             add_usage(usage)
         except RuntimeError as err:
             global_fail = str(err)
-            log(f"  全片pass失败：{err}")
+            log(f"  全片pass失敗：{err}")
 
     if not seg_reports and not global_report:
-        sys.exit("Error: 所有送审调用均失败，无法产出报告。不编造评审结果。\n" +
+        sys.exit("Error: 所有送審呼叫均失敗，無法產出報告。不編造評審結果。\n" +
                  "\n".join(f"{fmt_ts(s)}–{fmt_ts(e)}: {m}" for s, e, m in failures))
 
-    # 汇总
-    log("汇总最终报告...")
+    # 彙整
+    log("彙整最終報告...")
     try:
         body, usage = ask_model(session, api_key, args.model,
                                 synthesis_prompt(duration, seg_reports,
-                                                 global_report or "（全片pass调用失败，无记录）"))
+                                                 global_report or "（全片pass呼叫失敗，無記錄）"))
         add_usage(usage)
     except RuntimeError as err:
-        log(f"汇总call失败（{err}），退化为原始记录拼接")
-        body = "> 汇总call失败，以下为各pass原始记录直接拼接。\n\n" + \
+        log(f"彙整call失敗（{err}），退化為原始記錄拼接")
+        body = "> 彙整call失敗，以下為各pass原始記錄直接拼接。\n\n" + \
                (global_report or "") + "\n\n" + \
                "\n\n".join(f"## 分段 {fmt_ts(s)}–{fmt_ts(e)}\n{t}" for s, e, t in seg_reports)
 
-    lines = [f"# {video.name} · AI评审报告",
+    lines = [f"# {video.name} · AI評審報告",
              "",
-             f"> 模型：{args.model} | 评审时间：{time.strftime('%Y-%m-%d %H:%M')} | "
-             f"片长：{fmt_ts(duration)} | 分段：{len(seg_reports)}成功/{len(failures)}失败 | "
-             f"音效onset：{len(onsets)}个 / 静止段≥3s：{len(statics)}个"
-             f"（均为本地ffmpeg客观检测；模型不闻声，音画对位=onset+画面核对） | "
+             f"> 模型：{args.model} | 評審時間：{time.strftime('%Y-%m-%d %H:%M')} | "
+             f"片長：{fmt_ts(duration)} | 分段：{len(seg_reports)}成功/{len(failures)}失敗 | "
+             f"音效onset：{len(onsets)}個 / 靜止段≥3s：{len(statics)}個"
+             f"（均為本機ffmpeg客觀檢測；模型不聞聲，音畫對位=onset+畫面核對） | "
              f"tokens：in {total_usage['input_tokens']} / out {total_usage['output_tokens']}",
              ""]
     if failures:
-        lines.append("> ⚠️ 以下时间段送审失败，未被评审覆盖：" +
+        lines.append("> ⚠️ 以下時間段送審失敗，未被評審覆蓋：" +
                      "；".join(f"{fmt_ts(s)}–{fmt_ts(e)}（{m[:100]}）" for s, e, m in failures))
         lines.append("")
     if global_fail:
-        lines.append(f"> ⚠️ 全片连贯性pass调用失败：{global_fail[:200]}")
+        lines.append(f"> ⚠️ 全片連貫性pass呼叫失敗：{global_fail[:200]}")
         lines.append("")
     lines.append(body)
-    lines.append("\n\n---\n\n## 附录 · 客观检测数据（ffmpeg，非模型判断）\n")
-    lines.append("静止段≥3s：" + ("、".join(
-        f"{fmt_ts(a)}–{fmt_ts(b)}（{b - a:.1f}s）" for a, b in statics) or "无"))
-    lines.append("\n音效onset：" + ("、".join(fmt_ts(t) for t in onsets) or "无/无音轨"))
-    lines.append("\n## 附录 · 各段原始评审记录\n")
+    lines.append("\n\n---\n\n## 附錄 · 客觀檢測資料（ffmpeg，非模型判斷）\n")
+    lines.append("靜止段≥3s：" + ("、".join(
+        f"{fmt_ts(a)}–{fmt_ts(b)}（{b - a:.1f}s）" for a, b in statics) or "無"))
+    lines.append("\n音效onset：" + ("、".join(fmt_ts(t) for t in onsets) or "無/無音軌"))
+    lines.append("\n## 附錄 · 各段原始評審記錄\n")
     if global_report:
-        lines.append("### 全片pass（叙事/hero/节奏）\n\n" + global_report + "\n")
+        lines.append("### 全片pass（敘事/hero/節奏）\n\n" + global_report + "\n")
     for s, e, t in seg_reports:
         lines.append(f"### 分段 原片{fmt_ts(s)}–{fmt_ts(e)}\n\n{t}\n")
 
     out_path.write_text("\n".join(lines), encoding="utf-8")
-    log(f"报告已写入: {out_path}")
+    log(f"報告已寫入: {out_path}")
     print(out_path)
 
 

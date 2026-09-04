@@ -1,25 +1,25 @@
 #!/usr/bin/env bash
-# mix-voiceover.sh · Mix voiceover (人声主轨) + optional BGM into an MP4
+# mix-voiceover.sh · Mix voiceover (人聲主軌) + optional BGM into an MP4
 #
 # Usage:
 #   bash mix-voiceover.sh <video.mp4> --voiceover=<voice.mp3> [options]
 #
 # Required:
-#   --voiceover=<path>    Path to voiceover mp3 (人声主轨, 来自 narrate-pipeline.mjs)
+#   --voiceover=<path>    Path to voiceover mp3 (人聲主軌, 來自 narrate-pipeline.mjs)
 #
 # Optional:
 #   --bgm=<path>          BGM mp3 path (overrides --bgm-mood)
 #   --bgm-mood=<name>     Pick a preset BGM from assets/ (educational / tech / tutorial / ...)
-#   --bgm-volume=<0-1>    BGM 静态音量, 默认 0.18 (相对人声)
-#   --no-ducking          关闭 sidechain ducking（默认开启：人声响时 BGM 自动让路）
-#   --voice-volume=<0-2>  人声音量倍率, 默认 1.0
-#   --out=<path>          输出路径, 默认 <input>-voiced.mp4
+#   --bgm-volume=<0-1>    BGM 靜態音量, 預設 0.18 (相對人聲)
+#   --no-ducking          關閉 sidechain ducking（預設開啟：人聲響時 BGM 自動讓路）
+#   --voice-volume=<0-2>  人聲音量倍率, 預設 1.0
+#   --out=<path>          輸出路徑, 預設 <input>-voiced.mp4
 #
 # Behavior:
-#   - 视频流 stream copy（不重编码，快）
-#   - 人声始终是主轨，必带；BGM 可选
-#   - 默认开 ducking：人声响时 BGM 压到约 -10dB，人声停时回升
-#   - 输出长度 = 视频长度（人声/BGM 较短就尾静音；较长就截断）
+#   - 影片流 stream copy（不重編碼，快）
+#   - 人聲始終是主軌，必帶；BGM 可選
+#   - 預設開 ducking：人聲響時 BGM 壓到約 -10dB，人聲停時回升
+#   - 輸出長度 = 影片長度（人聲/BGM 較短就尾靜音；較長就截斷）
 #
 # Examples:
 #   bash mix-voiceover.sh anim.mp4 --voiceover=narration/voiceover.mp3
@@ -50,7 +50,7 @@ for arg in "$@"; do
     --voice-volume=*) VOICE_VOLUME="${arg#*=}" ;;
     --no-ducking)     DUCKING="0" ;;
     --out=*)          OUTPUT="${arg#*=}" ;;
-    -*)               echo "未知参数：$arg" >&2; exit 1 ;;
+    -*)               echo "未知引數：$arg" >&2; exit 1 ;;
     *)                INPUT="$arg" ;;
   esac
 done
@@ -64,43 +64,43 @@ if [ -z "$VOICEOVER" ] || [ ! -f "$VOICEOVER" ]; then
   exit 1
 fi
 
-# 解析 BGM 来源
+# 解析 BGM 來源
 if [ -z "$BGM" ] && [ -n "$BGM_MOOD" ]; then
   BGM="$ASSETS_DIR/bgm-${BGM_MOOD}.mp3"
 fi
 if [ -n "$BGM" ] && [ ! -f "$BGM" ]; then
-  echo "✗ BGM 文件不存在: $BGM" >&2
+  echo "✗ BGM 檔案不存在: $BGM" >&2
   echo "  可用 mood: $(ls "$ASSETS_DIR" 2>/dev/null | grep -E '^bgm-.*\.mp3$' | sed 's/^bgm-//;s/\.mp3$//' | tr '\n' ' ')" >&2
   exit 1
 fi
 
-# 输出路径
+# 輸出路徑
 if [ -z "$OUTPUT" ]; then
   base="${INPUT%.*}"
   OUTPUT="${base}-voiced.mp4"
 fi
 
 echo "─ mix-voiceover ──────────────"
-echo "  视频:     $INPUT"
-echo "  人声:     $VOICEOVER (vol=$VOICE_VOLUME)"
+echo "  影片:     $INPUT"
+echo "  人聲:     $VOICEOVER (vol=$VOICE_VOLUME)"
 if [ -n "$BGM" ]; then
   echo "  BGM:      $BGM (vol=$BGM_VOLUME, ducking=$DUCKING)"
 else
-  echo "  BGM:      （无）"
+  echo "  BGM:      （無）"
 fi
-echo "  输出:     $OUTPUT"
+echo "  輸出:     $OUTPUT"
 echo "──────────────────────────────"
 
 # ── ffmpeg filter graph ─────────────────────────────────────
 if [ -z "$BGM" ]; then
-  # 仅人声
+  # 僅人聲
   ffmpeg -y -i "$INPUT" -i "$VOICEOVER" \
     -filter_complex "[1:a]volume=${VOICE_VOLUME}[a]" \
     -map 0:v -map "[a]" \
     -c:v copy -c:a aac -b:a 192k -shortest \
     "$OUTPUT"
 elif [ "$DUCKING" = "1" ]; then
-  # 人声 + BGM + sidechain ducking
+  # 人聲 + BGM + sidechain ducking
   ffmpeg -y -i "$INPUT" -i "$VOICEOVER" -i "$BGM" \
     -filter_complex "
       [1:a]volume=${VOICE_VOLUME}[voice];
@@ -112,7 +112,7 @@ elif [ "$DUCKING" = "1" ]; then
     -c:v copy -c:a aac -b:a 192k -shortest \
     "$OUTPUT"
 else
-  # 人声 + BGM 静态混合
+  # 人聲 + BGM 靜態混合
   ffmpeg -y -i "$INPUT" -i "$VOICEOVER" -i "$BGM" \
     -filter_complex "
       [1:a]volume=${VOICE_VOLUME}[voice];

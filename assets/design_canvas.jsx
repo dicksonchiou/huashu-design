@@ -1,27 +1,27 @@
 /**
- * DesignCanvas — 变体并排网格布局
+ * DesignCanvas — 變體並排網格佈局
  *
- * 用于展示2+个静态设计variations让用户对比选择。
- * 每个variation有label，可hover放大。
+ * 用於展示2+個靜態設計variations讓使用者對比選擇。
+ * 每個variation有label，可hover放大。
  *
  * 用法：
  *   <DesignCanvas
- *     title="Hero区设计探索"
- *     subtitle="3个方向对比"
+ *     title="Hero區設計探索"
+ *     subtitle="3個方向對比"
  *     columns={3}
  *   >
- *     <Variation label="Minimal" description="极简克制版">
- *       <div>...你的设计1...</div>
+ *     <Variation label="Minimal" description="極簡克制版">
+ *       <div>...你的設計1...</div>
  *     </Variation>
- *     <Variation label="Editorial" description="杂志编辑风">
- *       <div>...你的设计2...</div>
+ *     <Variation label="Editorial" description="雜誌編輯風">
+ *       <div>...你的設計2...</div>
  *     </Variation>
- *     <Variation label="Brutalist" description="粗粝原始">
- *       <div>...你的设计3...</div>
+ *     <Variation label="Brutalist" description="粗糲原始">
+ *       <div>...你的設計3...</div>
  *     </Variation>
  *   </DesignCanvas>
  *
- * 配合React+Babel使用。放在合适的script里，然后window.DesignCanvas/window.Variation可用。
+ * 配合React+Babel使用。放在合適的script裡，然後window.DesignCanvas/window.Variation可用。
  */
 
 const canvasStyles = {

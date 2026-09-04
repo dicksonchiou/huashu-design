@@ -1,5 +1,5 @@
 /**
- * BrowserWindow — 浏览器窗口边框（Chrome风格）
+ * BrowserWindow — 瀏覽器視窗邊框（Chrome 風格）
  *
  * 含：traffic lights + tab bar + URL bar
  *

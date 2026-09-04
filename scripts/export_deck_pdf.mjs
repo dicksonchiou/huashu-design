@@ -1,23 +1,23 @@
 #!/usr/bin/env node
 /**
- * export_deck_pdf.mjs — 把多文件 slide deck 导出为单个矢量 PDF
+ * export_deck_pdf.mjs — 把多檔案 slide deck 匯出為單個向量 PDF
  *
  * 用法：
  *   node export_deck_pdf.mjs --slides <dir> --out <file.pdf> [--width 1920] [--height 1080] [--allow-network]
  *
- * 特点：
- *   - 文字保留矢量（可复制、可搜索）
- *   - 背景/图形 1:1 保真（Playwright 内嵌 Chromium 渲染）
- *   - 不需要对 HTML 做任何改造
- *   - 视觉损失 = 0（PDF 就是浏览器打印出来的）
+ * 特點：
+ *   - 文字保留向量（可複製、可搜尋）
+ *   - 背景/圖形 1:1 保真（Playwright 內嵌 Chromium 渲染）
+ *   - 不需要對 HTML 做任何改造
+ *   - 視覺損失 = 0（PDF 就是瀏覽器列印出來的）
  *
  * trade-off：
- *   - PDF 不可再编辑文字（要改回到 HTML 改）
+ *   - PDF 不可再編輯文字（要改回到 HTML 改）
  *
- * 依赖：playwright pdf-lib
+ * 依賴：playwright pdf-lib
  *   npm install playwright pdf-lib
  *
- * 会按文件名排序（01-xxx.html → 02-xxx.html → ...）
+ * 會按檔名排序（01-xxx.html → 02-xxx.html → ...）
  */
 
 import { chromium } from 'playwright';

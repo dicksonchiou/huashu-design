@@ -1,15 +1,15 @@
 /**
- * IosFrame — iPhone设备边框
+ * IosFrame — iPhone 裝置邊框
  *
- * 参考iPhone 15 Pro（393×852 logical pixels）
- * 含：灵动岛 + 状态栏（时间/信号/电池）+ Home Indicator + 圆角
+ * 參考 iPhone 15 Pro（393×852 logical pixels）
+ * 含：靈動島 + 狀態列（時間／訊號／電池）+ Home Indicator + 圓角
  *
  * 用法：
  *   <IosFrame time="9:41" battery={85}>
  *     <YourAppContent />
  *   </IosFrame>
  *
- * 自定义：
+ * 自訂：
  *   <IosFrame width={390} height={844} darkMode showKeyboard>
  *     ...
  *   </IosFrame>

@@ -1,25 +1,25 @@
 {
   "_meta": {
-    "description": "个人素材索引模板 — 复制此文件并填入你的真实数据",
-    "how_to_use": "1. 复制此文件到 ~/.claude/memory/personal-asset-index.json  2. 填入你的真实信息  3. design-philosophy skill 会自动读取",
-    "note": "真实数据文件不要放在 skill 目录内，避免随 skill 分发泄露隐私"
+    "description": "個人素材索引範本 — 複製此檔案並填入你的真實資料",
+    "how_to_use": "1. 複製此檔案到 ~/.claude/memory/personal-asset-index.json  2. 填入你的真實資訊  3. design-philosophy skill 會自動讀取",
+    "note": "真實資料檔案不要放在 skill 目錄內，避免隨 skill 分發洩露隱私"
   },
 
   "identity": {
-    "real_name": "你的真名",
-    "pen_names": ["笔名1", "笔名2"],
+    "real_name": "你的本名",
+    "pen_names": ["筆名1", "筆名2"],
     "english_name": "English Name",
-    "title": "你的头衔/一句话介绍",
-    "bio_short": "50-100字简介",
-    "bio_long": "200-300字详细介绍",
-    "avatar_url": "头像URL",
-    "source": "数据来源备注"
+    "title": "你的頭銜/一句話介紹",
+    "bio_short": "50-100字簡介",
+    "bio_long": "200-300字詳細介紹",
+    "avatar_url": "頭像URL",
+    "source": "資料來源備註"
   },
 
   "contact": {
     "email": "your@email.com",
-    "wechat_personal": "微信号",
-    "source": "数据来源备注"
+    "wechat_personal": "微信帳號",
+    "source": "資料來源備註"
   },
 
   "social_media": {
@@ -29,23 +29,23 @@
     },
     "youtube": {
       "url": "https://www.youtube.com/@YourChannel",
-      "channel_name": "频道名"
+      "channel_name": "頻道名稱"
     },
-    "source": "数据来源备注"
+    "source": "資料來源備註"
   },
 
   "websites": {
     "main_site": {
       "url": "https://yoursite.com",
-      "description": "网站描述",
+      "description": "網站描述",
       "local_path": "/path/to/local/project/"
     }
   },
 
   "products": {
     "product_1": {
-      "name": "产品名",
-      "type": "iOS App / Web App / CLI Tool / 电子书",
+      "name": "產品名稱",
+      "type": "iOS App / Web App / CLI Tool / 電子書",
       "achievement": "主要成就",
       "icon_path": "/path/to/icon.png",
       "project_path": "/path/to/project/"
@@ -53,9 +53,9 @@
   },
 
   "stats": {
-    "social_followers": "粉丝数",
-    "product_users": "用户数",
-    "source": "数据来源备注"
+    "social_followers": "粉絲數",
+    "product_users": "使用者數",
+    "source": "資料來源備註"
   },
 
   "design_assets": {
