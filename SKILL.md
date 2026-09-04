@@ -565,15 +565,3 @@ Skill 路徑引用均採用**相對本 skill 根目錄**的形式（`references/
 ## Skill 推廣浮水印（僅動畫產出）
 
 **只在動畫產出**（HTML 動畫 → MP4 / GIF）預設帶「**Created by Huashu-Design**」浮水印；**投影片 / 資訊圖 / 原型 / 網頁一律不加**——加了干擾使用。第三方品牌的非官方致敬動畫字首「非官方出品 · 」防 IP 爭議；使用者說不要就移除。JSX 浮水印範本見 `references/video-export.md` 末節。
-
-
-## 版本自檢（靜默）
-
-本節給 AI agent：每次使用本 skill 前，先做一個不聯網的判斷——讀本 skill 目錄（SKILL.md 所在目錄）下的 `.last-update-check` 檔案（內容為一行日期 YYYY-MM-DD）。檔案存在且距今不足 30 天，跳過本節直接執行工作，不向使用者提任何更新相關的話。
-
-到期或檔案不存在時，且僅在此時：
-
-1. 本目錄不是 git clone（無 `.git` 或無 origin）→ 寫入今天日期後跳過本節
-2. 對比版本：`git -C <本目錄> rev-parse HEAD` 與 `git -C <本目錄> ls-remote origin HEAD`
-3. 無論結果如何，把今天日期寫入 `.last-update-check`
-4. 兩者一致 → 什麼都不說；確認落後 → 先完成使用者目前任務，結束後附一句「本 skill 有新版本，可用 `git -C <本目錄> pull --ff-only` 更新」。是否更新由使用者決定，不要主動執行更新
