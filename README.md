@@ -23,9 +23,7 @@
 
 **你看到這篇 README 裡的每一個動畫，都是 huashu-design 自己做的。** 不是 Figma，不是 AE，就是一句話 prompt + skill 跑通。下次產品釋出要做宣傳片？現在你也能做。
 
-```
-npx skills add alchaincyf/huashu-design
-```
+從 GitHub 下載 ZIP，解壓縮後放入 agent 的 skills 目錄即可。
 
 跨 agent 通用——Claude Code、Cursor、Codex、OpenClaw、Hermes 都能裝。
 
@@ -63,21 +61,48 @@ npx skills add alchaincyf/huashu-design
 
 ## 裝上就能用
 
-```bash
-npx skills add alchaincyf/huashu-design
+### 安裝步驟
+
+1. 前往 [huashu-design GitHub repository](https://github.com/dicksonchiou/huashu-design)，點選 `Code` → `Download ZIP` 下載 ZIP 檔案。
+2. 解壓縮 ZIP，將解壓縮後的 `huashu-design` 資料夾移到下列任一個 skills 目錄。請保留完整資料夾結構，確認 `SKILL.md` 位於 `.../huashu-design/SKILL.md`。
+
+#### 專案層級（Project Level）
+
+Linux、macOS 或 Windows：
+
+```text
+<專案根目錄>/.agents/skills/huashu-design/
 ```
 
-> **裝完先自我檢查**：這個 skill 不只是 SKILL.md 一個檔案，`references/`、`assets/`、`scripts/`、`demos/` 四個子目錄裡有 99 處被引用的配方、指令碼、素材，缺一不可。裝完看一眼安裝目錄（如 `~/.claude/skills/huashu-design/`），如果只有 SKILL.md、沒有那幾個子目錄，表示你的 `skills` CLI 版本太舊（≤1.5.15 有個只同步單一檔案的 bug，已在 1.5.19 修復）。升級後再裝一次即可：
->
-> ```bash
-> npm i -g skills@latest        # 或 npx skills@latest add alchaincyf/huashu-design
-> ```
->
-> 升級後仍異常，就用 `git clone` 作為備援安裝，將儲存庫複製到任意 skills 目錄即可：
->
-> ```bash
-> git clone https://github.com/alchaincyf/huashu-design.git ~/.claude/skills/huashu-design
-> ```
+Windows 也可以使用反斜線表示：
+
+```text
+<專案根目錄>\.agents\skills\huashu-design\
+```
+
+#### 全域層級（Global Level）
+
+依照使用的 agent，將 `huashu-design` 資料夾放入對應路徑。
+
+Linux 或 macOS：
+
+| Agent | 安裝路徑 |
+| --- | --- |
+| Gemini CLI | `~/.gemini/config/skills/huashu-design/` |
+| Codex | `~/.codex/config/skills/huashu-design/` |
+| Claude Code | `~/.claude/skills/huashu-design/` |
+
+Windows：
+
+| Agent | 安裝路徑 |
+| --- | --- |
+| Gemini CLI | `%USERPROFILE%\.gemini\config\skills\huashu-design\` |
+| Codex | `%USERPROFILE%\.codex\config\skills\huashu-design\` |
+| Claude Code | `%USERPROFILE%\.claude\skills\huashu-design\` |
+
+`%USERPROFILE%` 代表目前 Windows 使用者的家目錄，例如 `C:\Users\<使用者名稱>`。
+
+> **裝完先自我檢查**：這個 skill 不只是 `SKILL.md` 一個檔案，`references/`、`assets/`、`scripts/`、`demos/` 四個子目錄裡有被引用的配方、指令碼與素材，缺一不可。請確認安裝後的目錄包含這些子目錄，而不是只有 `SKILL.md`。
 
 然後在 Claude Code / Codex / Cursor 等任意支援 skills 的 agent 裡直接說話：
 

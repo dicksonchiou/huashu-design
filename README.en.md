@@ -23,9 +23,7 @@ Not "decent for AI" quality — it looks like a real design team made it. Give t
 
 **Every animation in this README was made by huashu-design itself.** No Figma, no After Effects — just a sentence + skill run. Next product launch needs a promo video? You can make it too.
 
-```
-npx skills add alchaincyf/huashu-design
-```
+Download the ZIP from GitHub, extract it, and place it in your agent's skills directory.
 
 > 📣 **Now MIT-licensed.** As of 2026-05-14 this skill is fully open-source under the [MIT License](LICENSE) — free for personal **and** commercial use, no authorization required. ([what changed](#license))
 
@@ -51,21 +49,48 @@ npx skills add alchaincyf/huashu-design
 
 ## Install
 
-```bash
-npx skills add alchaincyf/huashu-design
+### Installation steps
+
+1. Go to the [huashu-design GitHub repository](https://github.com/dicksonchiou/huashu-design), select `Code` → `Download ZIP`, and download the ZIP archive.
+2. Extract the ZIP archive and move the extracted `huashu-design` folder into any of the skills directories below. Keep the complete folder structure and make sure `SKILL.md` is at `.../huashu-design/SKILL.md`.
+
+#### Project level
+
+Linux, macOS, or Windows:
+
+```text
+<project root>/.agents/skills/huashu-design/
 ```
 
-> **Verify after install**: this skill is more than a single SKILL.md — the `references/`, `assets/`, `scripts/`, and `demos/` subdirectories hold 99 referenced recipes, scripts, and assets that the skill depends on. After installing, check the install path (e.g. `~/.claude/skills/huashu-design/`); if you only see SKILL.md and none of those subdirectories, your `skills` CLI is too old (≤1.5.15 had a bug that synced only the single file, fixed in 1.5.19). Upgrade and reinstall:
->
-> ```bash
-> npm i -g skills@latest        # or npx skills@latest add alchaincyf/huashu-design
-> ```
->
-> If it's still wrong after upgrading, fall back to a `git clone` install — clone the repo into any skills directory:
->
-> ```bash
-> git clone https://github.com/alchaincyf/huashu-design.git ~/.claude/skills/huashu-design
-> ```
+On Windows, you can also use backslashes:
+
+```text
+<project root>\.agents\skills\huashu-design\
+```
+
+#### Global level
+
+Place the `huashu-design` folder in the path corresponding to your agent.
+
+Linux or macOS:
+
+| Agent | Installation path |
+| --- | --- |
+| Gemini CLI | `~/.gemini/config/skills/huashu-design/` |
+| Codex | `~/.codex/config/skills/huashu-design/` |
+| Claude Code | `~/.claude/skills/huashu-design/` |
+
+Windows:
+
+| Agent | Installation path |
+| --- | --- |
+| Gemini CLI | `%USERPROFILE%\.gemini\config\skills\huashu-design\` |
+| Codex | `%USERPROFILE%\.codex\config\skills\huashu-design\` |
+| Claude Code | `%USERPROFILE%\.claude\skills\huashu-design\` |
+
+`%USERPROFILE%` represents the current Windows user's home directory, for example `C:\Users\<username>`.
+
+> **Verify after installation**: this skill is more than a single `SKILL.md` file. The `references/`, `assets/`, `scripts/`, and `demos/` subdirectories contain the recipes, scripts, and assets it references. Make sure the installed folder contains these subdirectories, rather than only `SKILL.md`.
 
 Then just talk to Claude Code:
 
