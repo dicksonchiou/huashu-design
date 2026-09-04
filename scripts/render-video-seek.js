@@ -23,15 +23,17 @@
  * Usage:
  *   NODE_PATH=$(npm root -g) node render-video-seek.js <html-file> \
  *     [--duration=30] [--fps=60] [--width=1920] [--height=1080] \
- *     [--concurrency=4] [--settle=2] [--keep-chrome]
+ *     [--concurrency=4] [--settle=2] [--keep-chrome] [--allow-network]
  *
  * Output: next to the HTML file, same basename with .mp4 suffix.
+ * Network access is blocked by default; --allow-network is an explicit opt-in.
  */
 
 const { chromium } = require('playwright');
 const path = require('path');
 const fs = require('fs');
 const { spawnSync } = require('child_process');
+const { configureNetworkPolicy, secureContextOptions } = require('./playwright-network-policy');
 
 function arg(name, def) {
   const p = process.argv.find(a => a.startsWith('--' + name + '='));
@@ -56,6 +58,7 @@ const CONCURRENCY = Math.max(1, parseInt(arg('concurrency', '4')));  // 并行 w
 const SETTLE      = Math.max(1, parseInt(arg('settle', '2')));        // seek 后等几个 rAF 再截图
 const READY_TIMEOUT = parseFloat(arg('readytimeout', '8'));
 const KEEP_CHROME = hasFlag('keep-chrome');
+const ALLOW_NETWORK = hasFlag('allow-network');
 
 const HTML_ABS = path.resolve(HTML_FILE);
 const BASENAME = path.basename(HTML_FILE, path.extname(HTML_FILE));
@@ -82,6 +85,7 @@ const TOTAL_FRAMES = Math.round(FPS * DURATION);
 console.log(`▸ Seek-rendering: ${HTML_FILE}`);
 console.log(`  size: ${WIDTH}x${HEIGHT} · ${FPS}fps · duration: ${DURATION}s · frames: ${TOTAL_FRAMES} · workers: ${CONCURRENCY}`);
 console.log(`  output: ${MP4_OUT}`);
+console.log(`  network: ${ALLOW_NETWORK ? 'allowed (--allow-network)' : 'blocked (default)'}`);
 
 // 在 page 上下文里运行：等 SETTLE 个 rAF（让 React/Babel commit + 布局稳定后再截图）
 async function waitRaf(page, n) {
@@ -121,10 +125,11 @@ async function renderFrames(context, url, frames) {
   const browser = await chromium.launch();
   const url = 'file://' + HTML_ABS;
 
-  const context = await browser.newContext({
+  const context = await browser.newContext(secureContextOptions({
     viewport: { width: WIDTH, height: HEIGHT },
     deviceScaleFactor: 1,
-  });
+  }, { allowNetwork: ALLOW_NETWORK }));
+  await configureNetworkPolicy(context, { allowNetwork: ALLOW_NETWORK });
 
   // 关键信号：__seekRender 让 Stage / NarrationStage 冻结 wall-clock rAF，改由外部 __seek 推帧
   // __recording 沿用，让 Stage 强制 loop=false（复用既有约定）

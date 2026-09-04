@@ -3,7 +3,7 @@
  * export_deck_stage_pdf.mjs — 单文件 <deck-stage> 架构专用 PDF 导出
  *
  * 用法：
- *   node export_deck_stage_pdf.mjs --html <deck.html> --out <file.pdf> [--width 1920] [--height 1080]
+ *   node export_deck_stage_pdf.mjs --html <deck.html> --out <file.pdf> [--width 1920] [--height 1080] [--allow-network]
  *
  * 什么时候用这个脚本？
  *   - 你的 deck 是**单 HTML 文件**，所有 slide 是 `<section>`，外层用 `<deck-stage>` 包裹
@@ -31,16 +31,23 @@
 import { chromium } from 'playwright';
 import fs from 'fs/promises';
 import path from 'path';
+import networkPolicy from './playwright-network-policy.js';
+
+const { configureNetworkPolicy, secureContextOptions } = networkPolicy;
 
 function parseArgs() {
   const args = { width: 1920, height: 1080 };
   const a = process.argv.slice(2);
-  for (let i = 0; i < a.length; i += 2) {
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] === '--allow-network') {
+      args.allowNetwork = true;
+      continue;
+    }
     const k = a[i].replace(/^--/, '');
-    args[k] = a[i + 1];
+    args[k] = a[++i];
   }
   if (!args.html || !args.out) {
-    console.error('用法: node export_deck_stage_pdf.mjs --html <deck.html> --out <file.pdf> [--width 1920] [--height 1080]');
+    console.error('用法: node export_deck_stage_pdf.mjs --html <deck.html> --out <file.pdf> [--width 1920] [--height 1080] [--allow-network]');
     process.exit(1);
   }
   args.width = parseInt(args.width);
@@ -49,7 +56,7 @@ function parseArgs() {
 }
 
 async function main() {
-  const { html, out, width, height } = parseArgs();
+  const { html, out, width, height, allowNetwork = false } = parseArgs();
   const htmlAbs = path.resolve(html);
   const outFile = path.resolve(out);
 
@@ -61,7 +68,11 @@ async function main() {
   console.log(`Rendering ${path.basename(htmlAbs)} → ${path.basename(outFile)}`);
 
   const browser = await chromium.launch();
-  const ctx = await browser.newContext({ viewport: { width, height } });
+  const ctx = await browser.newContext(secureContextOptions(
+    { viewport: { width, height } },
+    { allowNetwork },
+  ));
+  await configureNetworkPolicy(ctx, { allowNetwork });
   const page = await ctx.newPage();
 
   await page.goto('file://' + htmlAbs, { waitUntil: 'networkidle' });

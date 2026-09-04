@@ -1,4 +1,10 @@
 #!/usr/bin/env python3
+# /// script
+# requires-python = ">=3.10"
+# dependencies = [
+#     "playwright>=1.48,<2",
+# ]
+# ///
 """
 verify.py — Playwright封装，用于验证claude-design产出的HTML
 
@@ -8,6 +14,7 @@ Usage:
     python verify.py deck.html --slides 10                  # 幻灯片逐页截（前10张）
     python verify.py design.html --output ./screenshots/   # 输出目录
     python verify.py design.html --show                    # 非headless，打开真实浏览器
+    python verify.py design.html --allow-network           # 可信 HTML 明確允許遠端資源
 
 依赖：
     pip install playwright
@@ -17,6 +24,7 @@ Usage:
 import argparse
 import sys
 import os
+import re
 import time
 from pathlib import Path
 
@@ -26,7 +34,8 @@ def parse_viewport(s):
     return {'width': int(w), 'height': int(h)}
 
 
-def verify_html(html_path, viewports=None, slides=0, output_dir=None, show=False, wait=2000):
+def verify_html(html_path, viewports=None, slides=0, output_dir=None, show=False,
+                wait=2000, allow_network=False):
     try:
         from playwright.sync_api import sync_playwright
     except ImportError:
@@ -57,7 +66,23 @@ def verify_html(html_path, viewports=None, slides=0, output_dir=None, show=False
         browser = p.chromium.launch(headless=not show)
 
         for viewport in viewports:
-            context = browser.new_context(viewport=viewport, device_scale_factor=2)
+            context = browser.new_context(
+                viewport=viewport,
+                device_scale_factor=2,
+                service_workers="allow" if allow_network else "block",
+            )
+            if not allow_network:
+                context.route(re.compile(r"^https?://", re.IGNORECASE),
+                              lambda route: route.abort("blockedbyclient"))
+                if not hasattr(context, "route_web_socket"):
+                    raise RuntimeError(
+                        "目前的 Python Playwright 版本不支援 WebSocket 路由阻擋；"
+                        "請升級 Playwright 後再執行驗證。"
+                    )
+                context.route_web_socket(
+                    re.compile(r"^wss?://", re.IGNORECASE),
+                    lambda websocket: websocket.close(),
+                )
             page = context.new_page()
 
             page.on("console", lambda msg: console_errors.append(f"[{msg.type}] {msg.text}") if msg.type in ("error", "warning") else None)
@@ -135,6 +160,8 @@ def main():
                         help="非headless，打开真实浏览器窗口")
     parser.add_argument("--wait", type=int, default=2000,
                         help="打开页面后等待的毫秒数（默认2000）")
+    parser.add_argument("--allow-network", action="store_true",
+                        help="明確允許 HTML 載入遠端 HTTP(S)/WebSocket 資源（預設阻擋）")
 
     args = parser.parse_args()
 
@@ -147,6 +174,7 @@ def main():
         output_dir=args.output,
         show=args.show,
         wait=args.wait,
+        allow_network=args.allow_network,
     )
 
 

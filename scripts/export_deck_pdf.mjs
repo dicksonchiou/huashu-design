@@ -3,7 +3,7 @@
  * export_deck_pdf.mjs — 把多文件 slide deck 导出为单个矢量 PDF
  *
  * 用法：
- *   node export_deck_pdf.mjs --slides <dir> --out <file.pdf> [--width 1920] [--height 1080]
+ *   node export_deck_pdf.mjs --slides <dir> --out <file.pdf> [--width 1920] [--height 1080] [--allow-network]
  *
  * 特点：
  *   - 文字保留矢量（可复制、可搜索）
@@ -24,16 +24,23 @@ import { chromium } from 'playwright';
 import { PDFDocument } from 'pdf-lib';
 import fs from 'fs/promises';
 import path from 'path';
+import networkPolicy from './playwright-network-policy.js';
+
+const { configureNetworkPolicy, secureContextOptions } = networkPolicy;
 
 function parseArgs() {
   const args = { width: 1920, height: 1080 };
   const a = process.argv.slice(2);
-  for (let i = 0; i < a.length; i += 2) {
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] === '--allow-network') {
+      args.allowNetwork = true;
+      continue;
+    }
     const k = a[i].replace(/^--/, '');
-    args[k] = a[i + 1];
+    args[k] = a[++i];
   }
   if (!args.slides || !args.out) {
-    console.error('用法: node export_deck_pdf.mjs --slides <dir> --out <file.pdf> [--width 1920] [--height 1080]');
+    console.error('用法: node export_deck_pdf.mjs --slides <dir> --out <file.pdf> [--width 1920] [--height 1080] [--allow-network]');
     process.exit(1);
   }
   args.width = parseInt(args.width);
@@ -42,7 +49,7 @@ function parseArgs() {
 }
 
 async function main() {
-  const { slides, out, width, height } = parseArgs();
+  const { slides, out, width, height, allowNetwork = false } = parseArgs();
   const slidesDir = path.resolve(slides);
   const outFile = path.resolve(out);
 
@@ -56,7 +63,11 @@ async function main() {
   console.log(`Found ${files.length} slides in ${slidesDir}`);
 
   const browser = await chromium.launch();
-  const ctx = await browser.newContext({ viewport: { width, height } });
+  const ctx = await browser.newContext(secureContextOptions(
+    { viewport: { width, height } },
+    { allowNetwork },
+  ));
+  await configureNetworkPolicy(ctx, { allowNetwork });
 
   // 1) Render each HTML to its own PDF buffer
   const pageBuffers = [];

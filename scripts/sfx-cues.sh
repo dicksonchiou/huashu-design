@@ -18,15 +18,26 @@ OUT="${3:?缺输出路径}"
 DUR=""
 for a in "$@"; do case "$a" in --dur=*) DUR="${a#*=}";; esac; done
 [ -z "$DUR" ] && DUR=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$IN" | cut -d. -f1)
+[[ "$DUR" =~ ^([0-9]+([.][0-9]*)?|[.][0-9]+)$ ]] || { echo "✗ --dur 必須是非負數字: $DUR" >&2; exit 1; }
 
 INPUTS=(-i "$IN")
-FILTER=""; MIX=""; i=1
+FILTER=""; MIX=""; i=1; line_no=0
 while IFS=$'\t' read -r t f db; do
+  line_no=$((line_no+1))
+  db="${db%$'\r'}"
   [ -z "$t" ] && continue
   case "$t" in \#*) continue;; esac
-  [ ! -f "$SFX_DIR/$f" ] && { echo "✗ SFX不存在: $f"; exit 1; }
-  INPUTS+=(-i "$SFX_DIR/$f")
-  ms=$(python3 -c "print(int(float('$t')*1000))")
+  [[ "$t" =~ ^([0-9]+([.][0-9]*)?|[.][0-9]+)$ ]] || { echo "✗ cue 表第 ${line_no} 行時間必須是非負數字" >&2; exit 1; }
+  [[ "$db" =~ ^-?([0-9]+([.][0-9]*)?|[.][0-9]+)$ ]] || { echo "✗ cue 表第 ${line_no} 行音量必須是數字" >&2; exit 1; }
+  sfx_path=$(python3 -c 'import os, sys
+base = os.path.realpath(sys.argv[1])
+candidate = os.path.realpath(os.path.join(base, sys.argv[2]))
+if os.path.commonpath((base, candidate)) != base:
+    raise SystemExit(2)
+print(candidate)' "$SFX_DIR" "$f") || { echo "✗ cue 表第 ${line_no} 行 SFX 路徑越界: $f" >&2; exit 1; }
+  [ ! -f "$sfx_path" ] && { echo "✗ SFX不存在: $f" >&2; exit 1; }
+  INPUTS+=(-i "$sfx_path")
+  ms=$(python3 -c 'import sys; print(int(float(sys.argv[1]) * 1000))' "$t")
   FILTER+="[$i:a]adelay=${ms}:all=1,volume=${db}dB[s$i];"
   MIX+="[s$i]"
   i=$((i+1))

@@ -8,7 +8,7 @@
  *   NODE_PATH=$(npm root -g) node render-video.js <html-file> \
  *     [--duration=30] [--width=1920] [--height=1080] \
  *     [--trim=<seconds>] [--fontwait=1.5] [--readytimeout=8] \
- *     [--keep-chrome]
+ *     [--keep-chrome] [--allow-network]
  *
  * Design:
  *   1. Warmup context (no record) — caches fonts/assets, closes cleanly
@@ -33,6 +33,8 @@
  *
  * Chrome elements hidden by default (all common class names + `.no-record`
  * convention). Pass --keep-chrome to disable this and see raw HTML.
+ * HTTP(S), WebSocket, and service workers are blocked by default. Pass
+ * --allow-network only for trusted HTML that intentionally uses remote assets.
  *
  * Output: next to the HTML file, same basename with .mp4 suffix.
  */
@@ -41,6 +43,7 @@ const { chromium } = require('playwright');
 const path = require('path');
 const fs = require('fs');
 const { spawnSync } = require('child_process');
+const { configureNetworkPolicy, secureContextOptions } = require('./playwright-network-policy');
 
 function arg(name, def) {
   const p = process.argv.find(a => a.startsWith('--' + name + '='));
@@ -64,6 +67,7 @@ const TRIM_OVERRIDE = arg('trim', null);              // manual override (second
 const FONT_WAIT = parseFloat(arg('fontwait', '1.5')); // fallback when no __ready signal
 const READY_TIMEOUT = parseFloat(arg('readytimeout', '8'));
 const KEEP_CHROME = hasFlag('keep-chrome');
+const ALLOW_NETWORK = hasFlag('allow-network');
 
 const HTML_ABS = path.resolve(HTML_FILE);
 const BASENAME = path.basename(HTML_FILE, path.extname(HTML_FILE));
@@ -89,6 +93,7 @@ const HIDE_CHROME_CSS = `
 
 console.log(`▸ Rendering: ${HTML_FILE}`);
 console.log(`  size: ${WIDTH}x${HEIGHT} · duration: ${DURATION}s · hide-chrome: ${!KEEP_CHROME}`);
+console.log(`  network: ${ALLOW_NETWORK ? 'allowed (--allow-network)' : 'blocked (default)'}`);
 console.log(`  output: ${MP4_OUT}`);
 
 (async () => {
@@ -99,9 +104,10 @@ console.log(`  output: ${MP4_OUT}`);
 
   // ── Phase 1: WARMUP (no recording, caches fonts/assets) ─────────────
   console.log('▸ Warmup (caching fonts)…');
-  const warmupCtx = await browser.newContext({
+  const warmupCtx = await browser.newContext(secureContextOptions({
     viewport: { width: WIDTH, height: HEIGHT },
-  });
+  }, { allowNetwork: ALLOW_NETWORK }));
+  await configureNetworkPolicy(warmupCtx, { allowNetwork: ALLOW_NETWORK });
   const warmupPage = await warmupCtx.newPage();
   // 'load' not 'networkidle' — unpkg/Google Fonts can keep connections alive
   // past our 30s budget even after all critical resources are in. __ready
@@ -112,14 +118,15 @@ console.log(`  output: ${MP4_OUT}`);
 
   // ── Phase 2: RECORD (fresh context, animation from t=0) ─────────────
   console.log('▸ Recording (clean start)…');
-  const recordCtx = await browser.newContext({
+  const recordCtx = await browser.newContext(secureContextOptions({
     viewport: { width: WIDTH, height: HEIGHT },
     deviceScaleFactor: 1,
     recordVideo: {
       dir: TMP_DIR,
       size: { width: WIDTH, height: HEIGHT },
     },
-  });
+  }, { allowNetwork: ALLOW_NETWORK }));
+  await configureNetworkPolicy(recordCtx, { allowNetwork: ALLOW_NETWORK });
 
   // Tell the page it's being recorded — animations.jsx Stage reads this
   // and forces loop=false so the export ends on the final frame instead of

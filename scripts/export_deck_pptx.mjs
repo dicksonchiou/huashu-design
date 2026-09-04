@@ -3,7 +3,7 @@
  * export_deck_pptx.mjs — 把多文件 slide deck 导出为可编辑 PPTX
  *
  * 用法：
- *   node export_deck_pptx.mjs --slides <dir> --out <file.pptx>
+ *   node export_deck_pptx.mjs --slides <dir> --out <file.pptx> [--allow-network]
  *
  * 行为：
  *   - 调用 scripts/html2pptx.js 把 HTML DOM 逐元素翻译成 PowerPoint 原生对象
@@ -25,7 +25,6 @@
  * 按文件名排序（01-xxx.html → 02-xxx.html → ...）。
  */
 
-import pptxgen from 'pptxgenjs';
 import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -35,12 +34,16 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 function parseArgs() {
   const args = {};
   const a = process.argv.slice(2);
-  for (let i = 0; i < a.length; i += 2) {
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] === '--allow-network') {
+      args.allowNetwork = true;
+      continue;
+    }
     const k = a[i].replace(/^--/, '');
-    args[k] = a[i + 1];
+    args[k] = a[++i];
   }
   if (!args.slides || !args.out) {
-    console.error('用法: node export_deck_pptx.mjs --slides <dir> --out <file.pptx>');
+    console.error('用法: node export_deck_pptx.mjs --slides <dir> --out <file.pptx> [--allow-network]');
     console.error('');
     console.error('⚠️ HTML 必须符合 4 条硬约束（见 references/editable-pptx.md）。');
     console.error('   视觉自由度优先的场景请改用 export_deck_pdf.mjs 导出 PDF。');
@@ -50,7 +53,7 @@ function parseArgs() {
 }
 
 async function main() {
-  const { slides, out } = parseArgs();
+  const { slides, out, allowNetwork = false } = parseArgs();
   const slidesDir = path.resolve(slides);
   const outFile = path.resolve(out);
 
@@ -64,6 +67,16 @@ async function main() {
 
   console.log(`Converting ${files.length} slides via html2pptx...`);
 
+  let PptxGenJS;
+  try {
+    const module = await import('pptxgenjs');
+    PptxGenJS = module.default ?? module;
+  } catch (e) {
+    console.error(`✗ 缺少可选依赖 pptxgenjs：${e.message}`);
+    console.error('  仅在需要可编辑 PPTX 导出时安装：npm install --no-save pptxgenjs@4.0.1');
+    process.exit(1);
+  }
+
   const { createRequire } = await import('module');
   const require = createRequire(import.meta.url);
   let html2pptx;
@@ -71,11 +84,11 @@ async function main() {
     html2pptx = require(path.join(__dirname, 'html2pptx.js'));
   } catch (e) {
     console.error(`✗ 加载 html2pptx.js 失败：${e.message}`);
-    console.error(`  依赖缺失时请跑：npm install playwright pptxgenjs sharp`);
+    console.error(`  依赖缺失时请跑：npm install playwright sharp`);
     process.exit(1);
   }
 
-  const pres = new pptxgen();
+  const pres = new PptxGenJS();
   pres.layout = 'LAYOUT_WIDE';  // 13.333 × 7.5 inch，对应 HTML body 960 × 540 pt
 
   const errors = [];
@@ -83,7 +96,7 @@ async function main() {
     const f = files[i];
     const fullPath = path.join(slidesDir, f);
     try {
-      await html2pptx(fullPath, pres);
+      await html2pptx(fullPath, pres, { allowNetwork });
       console.log(`  [${i + 1}/${files.length}] ${f} ✓`);
     } catch (e) {
       console.error(`  [${i + 1}/${files.length}] ${f} ✗  ${e.message}`);

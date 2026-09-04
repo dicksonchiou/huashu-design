@@ -34,6 +34,7 @@ import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { randomUUID } from 'node:crypto';
+import { TTS_FETCH_POLICY, validateTtsEndpoint } from './endpoint-policy.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SKILL_ROOT = path.resolve(__dirname, '..', '..');
@@ -188,15 +189,10 @@ async function readV3Audio(res) {
   return { audio: Buffer.concat(chunks), words };
 }
 
-// endpoint 域名白名单：key 和文本只允许发往字节官方域名，防 .env 被篡改后重定向
-const ALLOWED_ENDPOINT_HOSTS = /(^|\.)(bytedance\.com|volces\.com)$/;
-
 async function tts({ text, voice, speed, encoding, timestamps }) {
-  const endpoint = process.env.DOUBAO_TTS_ENDPOINT || 'https://openspeech.bytedance.com/api/v3/tts/unidirectional';
-  const host = new URL(endpoint).hostname;
-  if (!ALLOWED_ENDPOINT_HOSTS.test(host)) {
-    throw new Error(`DOUBAO_TTS_ENDPOINT 域名 ${host} 不在白名单（*.bytedance.com / *.volces.com），拒绝发送`);
-  }
+  const endpoint = validateTtsEndpoint(
+    process.env.DOUBAO_TTS_ENDPOINT || 'https://openspeech.bytedance.com/api/v3/tts/unidirectional',
+  ).href;
   const voiceId = voice || process.env.DOUBAO_TTS_VOICE_ID || process.env.DOUBAO_SPEAKER;
   const resourceId = process.env.DOUBAO_TTS_RESOURCE_ID || inferResourceId(voiceId || '');
   const requestId = randomUUID();
@@ -222,6 +218,7 @@ async function tts({ text, voice, speed, encoding, timestamps }) {
     method: 'POST',
     headers: buildAuthHeaders({ requestId, resourceId }),
     body: JSON.stringify(body),
+    ...TTS_FETCH_POLICY,
   });
 
   if (!res.ok) {
@@ -250,7 +247,9 @@ async function main() {
   }
 
   if (!args.yes && process.env.HUASHU_CLOUD_OK !== '1') {
-    const host = new URL(process.env.DOUBAO_TTS_ENDPOINT || 'https://openspeech.bytedance.com').hostname;
+    const host = validateTtsEndpoint(
+      process.env.DOUBAO_TTS_ENDPOINT || 'https://openspeech.bytedance.com/api/v3/tts/unidirectional',
+    ).hostname;
     console.error(
       `[云能力确认] 本次将把约${text.length}字文本发送到 ${host}（豆包TTS官方接口，使用你自己的key合成语音）。\n` +
       `确认无误请重跑并加 --yes，或设置环境变量 HUASHU_CLOUD_OK=1。数据流向声明见 SECURITY.md。`,

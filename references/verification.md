@@ -24,6 +24,8 @@ HTML文件里最常见的问题是JS报错导致白屏。用Playwright跑一遍�
 python ~/.claude/skills/huashu-design/scripts/verify.py path/to/design.html
 ```
 
+驗證器預設阻擋 HTTP(S)、WebSocket 與 service worker。只有可信 HTML 明確依賴遠端字型或腳本時，才加 `--allow-network`；正式交付優先改用本機固定版本資產。
+
 这个脚本会：
 1. 用headless chromium打开HTML
 2. 截图保存到项目目录

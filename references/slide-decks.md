@@ -587,6 +587,8 @@ HTML 优先是第一公民。但用户经常需要 PPTX/PDF 交付。提供两�
 node scripts/export_deck_pdf.mjs --slides <slides-dir> --out deck.pdf
 ```
 
+PDF/PPTX 匯出器預設阻擋 HTTP(S)、WebSocket 與 service worker。只有可信 deck 明確依賴遠端字型或腳本時，才加 `--allow-network`；正式交付優先使用本機固定版本資產。
+
 **特点**：
 - 文字**保留矢量**（可复制、可搜索）
 - 视觉 100% 保真（Playwright 内嵌 Chromium 渲染后打印）

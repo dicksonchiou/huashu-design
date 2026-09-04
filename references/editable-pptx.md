@@ -102,6 +102,8 @@ background: #FF6B6B;
 
 **为什么**：`html2pptx.js` 只从 `<img>` 元素提取图片路径，不解析 CSS 的 `background-image` URL。
 
+**安全限制**：PPTX 导出只接受本地文件或 data URI 图片；`scripts/image-source-guard.js` 会在交给 PptxGenJS 前拒绝远程/custom-scheme 图片，以及 ICNS、HEIF/HEIC/AVIF、JXL 等格式。请先把这些图片转换为 PNG、JPEG、WebP 或 SVG，不要绕过这个检查处理不可信素材。
+
 ---
 
 ## 合并文本框（`data-pptx-merge`）

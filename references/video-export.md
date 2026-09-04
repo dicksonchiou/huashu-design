@@ -37,6 +37,8 @@
 NODE_PATH=$(npm root -g) node /path/to/claude-design/scripts/render-video.js <html文件>
 ```
 
+渲染器預設阻擋 HTTP(S)、WebSocket 與 service worker。只有可信 HTML 明確依賴遠端字型或腳本時，才加 `--allow-network`；正式交付優先將依賴下載為本機固定版本。
+
 可选参数：
 - `--duration=30` 动画时长（秒）
 - `--width=1920 --height=1080` 分辨率

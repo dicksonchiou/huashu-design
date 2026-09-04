@@ -10,18 +10,22 @@
  *
  * 用法（复制到 deck 项目根目录，装依赖后运行）：
  *   npm install playwright sharp
- *   node gen_deck_thumbs.mjs --slides slides --out thumbs [--width 1600] [--quality 86]
+ *   node gen_deck_thumbs.mjs --slides slides --out thumbs [--width 1600] [--quality 86] [--allow-network]
  *
  * 然后在 index.html 的 MANIFEST 给每项加 thumb（与 file 同名 .jpg）：
  *   { file: "slides/01-cover.html", thumb: "thumbs/01-cover.jpg", label: "封面" }
  * deck_index.html 仅在画廊模式用 thumb；网格模式始终用 file(iframe)。没有 thumb 时画廊回退 iframe。
  *
  * 提示：缩略图分辨率别太低（默认 1600px），否则画廊里卡片 hover 放大后会发虚。
+ * 網路預設阻擋；只有可信 slide 確實依賴遠端資源時才加 --allow-network。
  */
 import { chromium } from 'playwright';
 import sharp from 'sharp';
 import fs from 'fs';
 import path from 'path';
+import networkPolicy from './playwright-network-policy.js';
+
+const { configureNetworkPolicy, secureContextOptions } = networkPolicy;
 
 const arg = (n, d) => { const i = process.argv.indexOf('--' + n); return i > -1 && process.argv[i + 1] ? process.argv[i + 1] : d; };
 const slidesDir = arg('slides', 'slides');
@@ -30,6 +34,7 @@ const width = parseInt(arg('width', '1600'), 10);
 const quality = parseInt(arg('quality', '86'), 10);
 const W = parseInt(arg('canvas-w', '1920'), 10);
 const H = parseInt(arg('canvas-h', '1080'), 10);
+const allowNetwork = process.argv.includes('--allow-network');
 
 if (!fs.existsSync(slidesDir)) { console.error('找不到 slides 目录: ' + slidesDir); process.exit(1); }
 fs.mkdirSync(outDir, { recursive: true });
@@ -37,7 +42,12 @@ const files = fs.readdirSync(slidesDir).filter(f => f.endsWith('.html')).sort();
 if (!files.length) { console.error('slides 目录里没有 .html'); process.exit(1); }
 
 const browser = await chromium.launch();
-const page = await browser.newPage({ viewport: { width: W, height: H }, deviceScaleFactor: 1 });
+const context = await browser.newContext(secureContextOptions(
+  { viewport: { width: W, height: H }, deviceScaleFactor: 1 },
+  { allowNetwork },
+));
+await configureNetworkPolicy(context, { allowNetwork });
+const page = await context.newPage();
 let ok = 0;
 for (const f of files) {
   const base = f.replace(/\.html$/, '');

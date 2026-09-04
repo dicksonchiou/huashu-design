@@ -28,6 +28,8 @@
 const { chromium } = require('playwright');
 const path = require('path');
 const sharp = require('sharp');
+const { validateImageSource } = require('./image-source-guard');
+const { configureNetworkPolicy, secureContextOptions } = require('./playwright-network-policy');
 
 const PT_PER_PX = 0.75;
 const PX_PER_IN = 96;
@@ -120,9 +122,7 @@ function validateTextBoxPosition(slideData, bodyDimensions) {
 // Helper: Add background to slide
 async function addBackground(slideData, targetSlide, tmpDir) {
   if (slideData.background.type === 'image' && slideData.background.path) {
-    let imagePath = slideData.background.path.startsWith('file://')
-      ? slideData.background.path.replace('file://', '')
-      : slideData.background.path;
+    const imagePath = validateImageSource(slideData.background.path, 'slide background image');
     targetSlide.background = { path: imagePath };
   } else if (slideData.background.type === 'color' && slideData.background.value) {
     targetSlide.background = { color: slideData.background.value };
@@ -133,7 +133,7 @@ async function addBackground(slideData, targetSlide, tmpDir) {
 function addElements(slideData, targetSlide, pres) {
   for (const el of slideData.elements) {
     if (el.type === 'image') {
-      let imagePath = el.src.startsWith('file://') ? el.src.replace('file://', '') : el.src;
+      const imagePath = validateImageSource(el.src, 'slide image');
       targetSlide.addImage({
         path: imagePath,
         x: el.position.x,
@@ -1095,7 +1095,8 @@ async function extractSlideData(page) {
 async function html2pptx(htmlFile, pres, options = {}) {
   const {
     tmpDir = process.env.TMPDIR || '/tmp',
-    slide = null
+    slide = null,
+    allowNetwork = false
   } = options;
 
   try {
@@ -1114,7 +1115,9 @@ async function html2pptx(htmlFile, pres, options = {}) {
     const validationErrors = [];
 
     try {
-      const page = await browser.newPage();
+      const context = await browser.newContext(secureContextOptions({}, { allowNetwork }));
+      await configureNetworkPolicy(context, { allowNetwork });
+      const page = await context.newPage();
       page.on('console', (msg) => {
         // Log the message text to your test runner's console
         console.log(`Browser console: ${msg.text()}`);

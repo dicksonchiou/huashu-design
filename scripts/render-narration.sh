@@ -24,6 +24,7 @@
 #   --out=<path>          输出路径，默认 <html-basename>-narrated.mp4
 #   --width=<px>          视频宽度（默认 1920）
 #   --height=<px>         视频高度（默认 1080）
+#   --allow-network       明確允許 HTML 載入遠端資源（預設阻擋）
 #
 # Examples:
 #   bash render-narration.sh demo.html --timeline=_narration/timeline.json
@@ -46,6 +47,7 @@ SEEK_FPS="60"
 OUT=""
 WIDTH="1920"
 HEIGHT="1080"
+ALLOW_NETWORK=""
 
 for arg in "$@"; do
   case "$arg" in
@@ -60,10 +62,16 @@ for arg in "$@"; do
     --out=*)         OUT="${arg#*=}" ;;
     --width=*)       WIDTH="${arg#*=}" ;;
     --height=*)      HEIGHT="${arg#*=}" ;;
+    --allow-network) ALLOW_NETWORK="--allow-network" ;;
     -*)              echo "未知参数：$arg" >&2; exit 1 ;;
     *)               HTML="$arg" ;;
   esac
 done
+
+RENDER_NETWORK_ARGS=()
+if [ -n "$ALLOW_NETWORK" ]; then
+  RENDER_NETWORK_ARGS+=("$ALLOW_NETWORK")
+fi
 
 if [ -z "$HTML" ] || [ ! -f "$HTML" ]; then
   echo "Usage: bash render-narration.sh <html> --timeline=<path> [options]" >&2
@@ -116,13 +124,15 @@ if [ -n "$USE_SEEK" ]; then
     --duration="$RECORD_DURATION" \
     --fps="$SEEK_FPS" \
     --width="$WIDTH" \
-    --height="$HEIGHT"
+    --height="$HEIGHT" \
+    "${RENDER_NETWORK_ARGS[@]}"
 else
   echo "▸ Step 1/2 · 录制 HTML 动画 (无声)"
   NODE_PATH=$(npm root -g) node "$SCRIPT_DIR/render-video.js" "$HTML_ABS" \
     --duration="$RECORD_DURATION" \
     --width="$WIDTH" \
-    --height="$HEIGHT"
+    --height="$HEIGHT" \
+    "${RENDER_NETWORK_ARGS[@]}"
 fi
 
 if [ ! -f "$SILENT_MP4" ]; then
